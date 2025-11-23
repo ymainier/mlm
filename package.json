@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.71",
-    "ai": "^5.0.100"
+    "ai": "^5.0.100",
+    "commander": "^14.0.2"
   }
 }

@@ -1,13 +1,8 @@
-import { streamText } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { main } from "./cli";
 
-const { textStream } = streamText({
-  model: openai("gpt-5-mini"),
-  prompt: "Write a short poem about embedding models.",
-});
-
-for await (const textPart of textStream) {
-  process.stdout.write(textPart);
+try {
+  await main();
+} catch (error) {
+  console.error(String(error));
+  process.exit(1);
 }
-
-console.log();

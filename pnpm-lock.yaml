@@ -14,6 +14,9 @@ importers:
       ai:
         specifier: ^5.0.100
         version: 5.0.100(zod@4.1.12)
+      commander:
+        specifier: ^14.0.2
+        version: 14.0.2
     devDependencies:
       '@types/node':
         specifier: ^24.10.1
@@ -222,6 +225,10 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
+  commander@14.0.2:
+    resolution: {integrity: sha512-TywoWNNRbhoD0BXs1P3ZEScW8W5iKrnbithIl0YH+uCmBd0QpPOA8yc82DS3BIE5Ma6FnBVUsJ7wVUDz4dvOWQ==}
+    engines: {node: '>=20'}
+
   esbuild@0.25.12:
     resolution: {integrity: sha512-bbPBYYrtZbkt6Os6FiTLCTFxvq4tt3JKall1vRwshA3fdVztsLAatFaZobhkBC8/BrPetoa0oksYoKXoG4ryJg==}
     engines: {node: '>=18'}
@@ -377,6 +384,8 @@ snapshots:
       '@ai-sdk/provider-utils': 3.0.17(zod@4.1.12)
       '@opentelemetry/api': 1.9.0
       zod: 4.1.12
+
+  commander@14.0.2: {}
 
   esbuild@0.25.12:
     optionalDependencies:
