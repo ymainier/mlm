@@ -12,20 +12,24 @@ export function prompt() {
 
   cmd
     .argument("<prompt>", "prompt text (use - for stdin)")
-    .action(async (promptString: string) => {
+    .option(
+      "-s, --system <system>",
+      "system prompt to guide the model behavior"
+    )
+    .action(async (promptString: string, { system }: { system?: string }) => {
       const shouldReadStdin = promptString === "-";
       const isPiped = !process.stdin.isTTY;
       const prompt =
         shouldReadStdin && isPiped ? await readStdin() : promptString;
       const model = getModel();
 
-      const { textStream } = streamText({ model, prompt });
+      const { textStream } = streamText({ system, model, prompt });
 
       for await (const textPart of textStream) {
         process.stdout.write(textPart);
       }
 
-      console.log();
+      process.stdout.write("\n");
     });
 
   return cmd;

@@ -65,7 +65,7 @@ describe("prompt command", () => {
 
     expect(process.stdout.write).toHaveBeenCalledWith("Hello ");
     expect(process.stdout.write).toHaveBeenCalledWith("world");
-    expect(console.log).toHaveBeenCalledWith();
+    expect(process.stdout.write).toHaveBeenCalledWith("\n");
   });
 
   it("should read from stdin when prompt is '-' and input is piped", async () => {
@@ -111,10 +111,11 @@ describe("prompt command", () => {
     const cmd = prompt();
     await cmd.parseAsync(["node", "test", "test"]);
 
-    expect(process.stdout.write).toHaveBeenCalledTimes(3);
+    expect(process.stdout.write).toHaveBeenCalledTimes(4);
     expect(process.stdout.write).toHaveBeenNthCalledWith(1, "chunk1");
     expect(process.stdout.write).toHaveBeenNthCalledWith(2, "chunk2");
     expect(process.stdout.write).toHaveBeenNthCalledWith(3, "chunk3");
+    expect(process.stdout.write).toHaveBeenNthCalledWith(4, "\n");
   });
 
   it("should append newline at the end", async () => {
@@ -123,7 +124,7 @@ describe("prompt command", () => {
     const cmd = prompt();
     await cmd.parseAsync(["node", "test", "test"]);
 
-    expect(console.log).toHaveBeenCalledWith();
+    expect(process.stdout.write).toHaveBeenCalledWith("\n");
   });
 
   it("should handle empty stream", async () => {
@@ -132,6 +133,26 @@ describe("prompt command", () => {
     const cmd = prompt();
     await cmd.parseAsync(["node", "test", "test"]);
 
-    expect(console.log).toHaveBeenCalledWith();
+    expect(process.stdout.write).toHaveBeenCalledWith("\n");
+  });
+
+  it("should accept a system prompt option", async () => {
+    vi.mocked(streamText).mockReturnValue(createMockStream(["response"]));
+
+    const cmd = prompt();
+    await cmd.parseAsync([
+      "node",
+      "test",
+      "--system",
+      "You are a helpful assistant.",
+      "test prompt",
+    ]);
+
+    expect(streamText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        system: "You are a helpful assistant.",
+        prompt: "test prompt",
+      })
+    );
   });
 });
