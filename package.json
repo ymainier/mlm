@@ -5,7 +5,8 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "dev": "tsx src/index.ts"
+    "dev": "tsx src/index.ts",
+    "test": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -13,7 +14,8 @@
   "packageManager": "pnpm@10.15.1",
   "devDependencies": {
     "@types/node": "^24.10.1",
-    "tsx": "^4.20.6"
+    "tsx": "^4.20.6",
+    "vitest": "^4.0.13"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.71",

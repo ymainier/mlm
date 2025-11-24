@@ -15,7 +15,8 @@ export function prompt() {
     .action(async (promptString: string) => {
       const shouldReadStdin = promptString === "-";
       const isPiped = !process.stdin.isTTY;
-      const prompt = shouldReadStdin && isPiped ? await readStdin() : promptString;
+      const prompt =
+        shouldReadStdin && isPiped ? await readStdin() : promptString;
       const model = getModel();
 
       const { textStream } = streamText({ model, prompt });
