@@ -1,7 +1,6 @@
 import { Command } from "commander";
-import { readStdin } from "../utils/input";
-import { streamText } from "ai";
-import { getModel } from "../utils/models";
+import { getPrompt } from "../utils/input";
+import { streamText } from "../utils/text";
 
 export function prompt() {
   const cmd = new Command("prompt");
@@ -15,22 +14,12 @@ export function prompt() {
     .argument("<prompt>", "prompt text (use - for stdin)")
     .action(
       async (
-        promptString: string,
-        { system, model: providerModel }: { system?: string; model: string }
+        input: string,
+        { system, model }: { system?: string; model: string }
       ) => {
-        const shouldReadStdin = promptString === "-";
-        const isPiped = !process.stdin.isTTY;
-        const prompt =
-          shouldReadStdin && isPiped ? await readStdin() : promptString;
-        const model = getModel(providerModel);
-
-        const { textStream } = streamText({ system, model, prompt });
-
-        for await (const textPart of textStream) {
-          process.stdout.write(textPart);
-        }
-
-        process.stdout.write("\n");
+        const prompt = await getPrompt(input);
+        const onTextPart = process.stdout.write.bind(process.stdout);
+        streamText({ system, model, prompt, onTextPart });
       }
     );
 
