@@ -15,7 +15,7 @@ export function cmd() {
 
   cmd
     .option("-m, --model <provider/model>", "model to use", "openai/gpt-5-mini")
-    .argument("<prompt>", "prompt text (use - for stdin)")
+    .argument("<prompt>", "command to generate (use - for stdin)")
     .action(async (input: string, { model }: { model: string }) => {
       const system = COMMAND_SYSTEM_PROMPT;
       const prompt = await getPrompt(input);
