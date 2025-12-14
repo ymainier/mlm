@@ -22,7 +22,7 @@ vi.mock("node:process", () => ({
 }));
 
 function createMockImageResult(
-  images: Array<{ base64: string; mediaType: string }>
+  images: Array<{ base64: string; mediaType: string }>,
 ): Awaited<ReturnType<typeof generateImage>> {
   return { images } as unknown as Awaited<ReturnType<typeof generateImage>>;
 }
@@ -43,7 +43,7 @@ describe("image-new command", () => {
 
   it("should call generateImage with prompt and model", async () => {
     vi.mocked(generateImage).mockResolvedValue(
-      createMockImageResult([{ base64: "aGVsbG8=", mediaType: "image/png" }])
+      createMockImageResult([{ base64: "aGVsbG8=", mediaType: "image/png" }]),
     );
 
     const cmd = imageNew();
@@ -58,7 +58,7 @@ describe("image-new command", () => {
 
   it("should use custom model when specified", async () => {
     vi.mocked(generateImage).mockResolvedValue(
-      createMockImageResult([{ base64: "aGVsbG8=", mediaType: "image/png" }])
+      createMockImageResult([{ base64: "aGVsbG8=", mediaType: "image/png" }]),
     );
 
     const cmd = imageNew();
@@ -80,7 +80,7 @@ describe("image-new command", () => {
   it("should write generated images to temp directory", async () => {
     const base64Data = Buffer.from("fake image data").toString("base64");
     vi.mocked(generateImage).mockResolvedValue(
-      createMockImageResult([{ base64: base64Data, mediaType: "image/png" }])
+      createMockImageResult([{ base64: base64Data, mediaType: "image/png" }]),
     );
 
     const cmd = imageNew();
@@ -88,7 +88,7 @@ describe("image-new command", () => {
 
     expect(writeFile).toHaveBeenCalledWith(
       expect.stringMatching(/^\/tmp\/image-\d+-0\.png$/),
-      expect.any(Buffer)
+      expect.any(Buffer),
     );
   });
 
@@ -97,7 +97,7 @@ describe("image-new command", () => {
       createMockImageResult([
         { base64: "YQ==", mediaType: "image/png" },
         { base64: "Yg==", mediaType: "image/jpeg" },
-      ])
+      ]),
     );
 
     const cmd = imageNew();
@@ -116,7 +116,7 @@ describe("image-new command", () => {
 
     expect(console.error).toHaveBeenCalledWith(
       "Error generating image:",
-      expect.any(Error)
+      expect.any(Error),
     );
     expect(exit).toHaveBeenCalledWith(1);
   });
@@ -137,7 +137,7 @@ describe("image-new command", () => {
         { base64: "YQ==", mediaType: "image/png" },
         { base64: "Yg==", mediaType: "image/png" },
         { base64: "Yw==", mediaType: "image/png" },
-      ])
+      ]),
     );
 
     const cmd = imageNew();
@@ -148,7 +148,7 @@ describe("image-new command", () => {
 
   it("should parse single -o option into providerOptions", async () => {
     vi.mocked(generateImage).mockResolvedValue(
-      createMockImageResult([{ base64: "YQ==", mediaType: "image/png" }])
+      createMockImageResult([{ base64: "YQ==", mediaType: "image/png" }]),
     );
 
     const cmd = imageNew();
@@ -169,7 +169,7 @@ describe("image-new command", () => {
 
   it("should parse multiple -o options into providerOptions", async () => {
     vi.mocked(generateImage).mockResolvedValue(
-      createMockImageResult([{ base64: "YQ==", mediaType: "image/png" }])
+      createMockImageResult([{ base64: "YQ==", mediaType: "image/png" }]),
     );
 
     const cmd = imageNew();

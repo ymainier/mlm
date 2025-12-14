@@ -19,14 +19,14 @@ export function image() {
     .option(
       "-m, --model <provider/model>",
       "image model to use",
-      "google/gemini-2.5-flash-image"
+      "google/gemini-2.5-flash-image",
     )
     .option("-i, --image <path>", "path to input image file")
     .option(
       "-o, --option <provider.key=value>",
       "provider option (repeatable)",
       collect,
-      []
+      [],
     )
     .argument("<prompt>", "description of the image (use - for stdin)")
     .action(
@@ -36,7 +36,7 @@ export function image() {
           model,
           image,
           option,
-        }: { model: string; image?: string; option: string[] }
+        }: { model: string; image?: string; option: string[] },
       ) => {
         const system = IMAGE_SYSTEM_PROMPT;
         const prompt = await getPrompt(input);
@@ -52,7 +52,7 @@ export function image() {
           content.push({ type: "image", mediaType, image: imageBuffer });
 
           console.log(
-            `Using input image: ${image}: ${mediaType} ${imageBuffer.length} bytes`
+            `Using input image: ${image}: ${mediaType} ${imageBuffer.length} bytes`,
           );
         }
 
@@ -68,7 +68,7 @@ export function image() {
 
         // Save generated images to local filesystem
         const imageFiles = result.files.filter((f) =>
-          f.mediaType?.startsWith("image/")
+          f.mediaType?.startsWith("image/"),
         );
 
         if (imageFiles.length > 0) {
@@ -89,7 +89,7 @@ export function image() {
           console.log("No images were generated.");
           exit(1);
         }
-      }
+      },
     );
 
   return cmd;

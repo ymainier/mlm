@@ -21,12 +21,12 @@ export function models() {
     .option(
       "-t, --type [modelType]",
       "filter by model type (all, language, embedding or image)",
-      "all"
+      "all",
     )
     .option(
       "-s, --sort [sortBy]",
       'sort by "model", "input" price or "output" price',
-      "model"
+      "model",
     )
     .option("-o, --only-model", "only display model names")
     .action(
@@ -39,41 +39,42 @@ export function models() {
         sort: string;
         onlyModel: boolean;
       }) => {
-      const modelType = MODEL_TYPES.includes(
-        type.toLowerCase() as (typeof MODEL_TYPES)[number]
-      )
-        ? type.toLowerCase()
-        : undefined;
-      const sortKey = SORT_KEYS.includes(
-        sort.toLowerCase() as (typeof SORT_KEYS)[number]
-      )
-        ? sort.toLowerCase()
-        : "model";
-      const availableModels = await gateway.getAvailableModels();
+        const modelType = MODEL_TYPES.includes(
+          type.toLowerCase() as (typeof MODEL_TYPES)[number],
+        )
+          ? type.toLowerCase()
+          : undefined;
+        const sortKey = SORT_KEYS.includes(
+          sort.toLowerCase() as (typeof SORT_KEYS)[number],
+        )
+          ? sort.toLowerCase()
+          : "model";
+        const availableModels = await gateway.getAvailableModels();
 
-      const data = availableModels.models
-        .filter(
-          (m) => typeof modelType === "undefined" || m.modelType === modelType
-        )
-        .map(
-          (model) =>
-            [
-              model.id,
-              model.modelType ?? "unknown",
-              parseFloat(model.pricing?.input ?? "0") * 1_000_000,
-              parseFloat(model.pricing?.output ?? "0") * 1_000_000,
-            ] as [string, string, number, number]
-        )
-        .sort((a, b) => {
-          if (sortKey === "input") {
-            const comparison = a[2] - b[2];
-            return comparison !== 0 ? comparison : a[3] - b[3];
-          } else if (sortKey === "output") {
-            const comparison = a[3] - b[3];
-            return comparison !== 0 ? comparison : a[2] - b[2];
-          }
-          return a[0].localeCompare(b[0]);
-        });
+        const data = availableModels.models
+          .filter(
+            (m) =>
+              typeof modelType === "undefined" || m.modelType === modelType,
+          )
+          .map(
+            (model) =>
+              [
+                model.id,
+                model.modelType ?? "unknown",
+                parseFloat(model.pricing?.input ?? "0") * 1_000_000,
+                parseFloat(model.pricing?.output ?? "0") * 1_000_000,
+              ] as [string, string, number, number],
+          )
+          .sort((a, b) => {
+            if (sortKey === "input") {
+              const comparison = a[2] - b[2];
+              return comparison !== 0 ? comparison : a[3] - b[3];
+            } else if (sortKey === "output") {
+              const comparison = a[3] - b[3];
+              return comparison !== 0 ? comparison : a[2] - b[2];
+            }
+            return a[0].localeCompare(b[0]);
+          });
 
         if (onlyModel) {
           data.forEach(([modelId]) => console.log(modelId));
@@ -90,7 +91,7 @@ export function models() {
           });
           console.log(output);
         }
-      }
+      },
     );
 
   return cmd;

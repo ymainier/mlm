@@ -23,7 +23,7 @@ vi.mock("node:process", () => ({
 }));
 
 function createMockTextResult(
-  files: Array<{ mediaType: string; uint8Array: Uint8Array }>
+  files: Array<{ mediaType: string; uint8Array: Uint8Array }>,
 ): Awaited<ReturnType<typeof generateText>> {
   return { files } as unknown as Awaited<ReturnType<typeof generateText>>;
 }
@@ -45,7 +45,7 @@ describe("image command", () => {
     vi.mocked(generateText).mockResolvedValue(
       createMockTextResult([
         { mediaType: "image/png", uint8Array: new Uint8Array([1, 2, 3]) },
-      ])
+      ]),
     );
 
     const cmd = image();
@@ -63,22 +63,30 @@ describe("image command", () => {
             ]),
           }),
         ]),
-      })
+      }),
     );
   });
 
   it("should use custom model when specified", async () => {
     vi.mocked(generateText).mockResolvedValue(
-      createMockTextResult([{ mediaType: "image/png", uint8Array: new Uint8Array([1]) }])
+      createMockTextResult([
+        { mediaType: "image/png", uint8Array: new Uint8Array([1]) },
+      ]),
     );
 
     const cmd = image();
-    await cmd.parseAsync(["node", "test", "-m", "openai/gpt-4-vision", "a dog"]);
+    await cmd.parseAsync([
+      "node",
+      "test",
+      "-m",
+      "openai/gpt-4-vision",
+      "a dog",
+    ]);
 
     expect(generateText).toHaveBeenCalledWith(
       expect.objectContaining({
         model: "openai/gpt-4-vision",
-      })
+      }),
     );
   });
 
@@ -86,7 +94,9 @@ describe("image command", () => {
     const mockImageBuffer = Buffer.from("fake image data");
     vi.mocked(readFile).mockResolvedValue(mockImageBuffer);
     vi.mocked(generateText).mockResolvedValue(
-      createMockTextResult([{ mediaType: "image/png", uint8Array: new Uint8Array([1]) }])
+      createMockTextResult([
+        { mediaType: "image/png", uint8Array: new Uint8Array([1]) },
+      ]),
     );
 
     const cmd = image();
@@ -112,7 +122,7 @@ describe("image command", () => {
             ]),
           }),
         ]),
-      })
+      }),
     );
   });
 
@@ -120,7 +130,9 @@ describe("image command", () => {
     const mockImageBuffer = Buffer.from("fake jpeg data");
     vi.mocked(readFile).mockResolvedValue(mockImageBuffer);
     vi.mocked(generateText).mockResolvedValue(
-      createMockTextResult([{ mediaType: "image/png", uint8Array: new Uint8Array([1]) }])
+      createMockTextResult([
+        { mediaType: "image/png", uint8Array: new Uint8Array([1]) },
+      ]),
     );
 
     const cmd = image();
@@ -144,14 +156,16 @@ describe("image command", () => {
             ]),
           }),
         ]),
-      })
+      }),
     );
   });
 
   it("should write generated images to temp directory", async () => {
     const mockUint8Array = new Uint8Array([1, 2, 3, 4]);
     vi.mocked(generateText).mockResolvedValue(
-      createMockTextResult([{ mediaType: "image/png", uint8Array: mockUint8Array }])
+      createMockTextResult([
+        { mediaType: "image/png", uint8Array: mockUint8Array },
+      ]),
     );
 
     const cmd = image();
@@ -159,7 +173,7 @@ describe("image command", () => {
 
     expect(writeFile).toHaveBeenCalledWith(
       expect.stringMatching(/^\/tmp\/image-\d+-0\.png$/),
-      mockUint8Array
+      mockUint8Array,
     );
   });
 
@@ -178,7 +192,7 @@ describe("image command", () => {
       createMockTextResult([
         { mediaType: "image/png", uint8Array: new Uint8Array([1]) },
         { mediaType: "image/jpeg", uint8Array: new Uint8Array([2]) },
-      ])
+      ]),
     );
 
     const cmd = image();
@@ -187,17 +201,19 @@ describe("image command", () => {
     expect(writeFile).toHaveBeenCalledTimes(2);
     expect(writeFile).toHaveBeenCalledWith(
       expect.stringMatching(/\.png$/),
-      expect.any(Uint8Array)
+      expect.any(Uint8Array),
     );
     expect(writeFile).toHaveBeenCalledWith(
       expect.stringMatching(/\.jpeg$/),
-      expect.any(Uint8Array)
+      expect.any(Uint8Array),
     );
   });
 
   it("should pass empty providerOptions by default", async () => {
     vi.mocked(generateText).mockResolvedValue(
-      createMockTextResult([{ mediaType: "image/png", uint8Array: new Uint8Array([1]) }])
+      createMockTextResult([
+        { mediaType: "image/png", uint8Array: new Uint8Array([1]) },
+      ]),
     );
 
     const cmd = image();
@@ -206,13 +222,15 @@ describe("image command", () => {
     expect(generateText).toHaveBeenCalledWith(
       expect.objectContaining({
         providerOptions: {},
-      })
+      }),
     );
   });
 
   it("should parse single -o option into providerOptions", async () => {
     vi.mocked(generateText).mockResolvedValue(
-      createMockTextResult([{ mediaType: "image/png", uint8Array: new Uint8Array([1]) }])
+      createMockTextResult([
+        { mediaType: "image/png", uint8Array: new Uint8Array([1]) },
+      ]),
     );
 
     const cmd = image();
@@ -227,13 +245,15 @@ describe("image command", () => {
     expect(generateText).toHaveBeenCalledWith(
       expect.objectContaining({
         providerOptions: { google: { safetySettings: "none" } },
-      })
+      }),
     );
   });
 
   it("should parse multiple -o options into providerOptions", async () => {
     vi.mocked(generateText).mockResolvedValue(
-      createMockTextResult([{ mediaType: "image/png", uint8Array: new Uint8Array([1]) }])
+      createMockTextResult([
+        { mediaType: "image/png", uint8Array: new Uint8Array([1]) },
+      ]),
     );
 
     const cmd = image();
@@ -249,8 +269,10 @@ describe("image command", () => {
 
     expect(generateText).toHaveBeenCalledWith(
       expect.objectContaining({
-        providerOptions: { google: { safetySettings: "none", maxTokens: 2000 } },
-      })
+        providerOptions: {
+          google: { safetySettings: "none", maxTokens: 2000 },
+        },
+      }),
     );
   });
 });

@@ -34,7 +34,7 @@ describe("prompt command", () => {
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         prompt: "resolved prompt",
-      })
+      }),
     );
   });
 
@@ -45,7 +45,7 @@ describe("prompt command", () => {
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         model: "openai/gpt-5-mini",
-      })
+      }),
     );
   });
 
@@ -62,7 +62,7 @@ describe("prompt command", () => {
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         model: "anthropic/claude-3-haiku",
-      })
+      }),
     );
   });
 
@@ -80,7 +80,7 @@ describe("prompt command", () => {
       expect.objectContaining({
         system: "You are a helpful assistant.",
         prompt: "test prompt",
-      })
+      }),
     );
   });
 
@@ -91,7 +91,7 @@ describe("prompt command", () => {
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         onTextPart: expect.any(Function),
-      })
+      }),
     );
   });
 
@@ -102,7 +102,7 @@ describe("prompt command", () => {
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         providerOptions: {},
-      })
+      }),
     );
   });
 
@@ -119,7 +119,7 @@ describe("prompt command", () => {
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         providerOptions: { openai: { reasoningEffort: "low" } },
-      })
+      }),
     );
   });
 
@@ -137,8 +137,10 @@ describe("prompt command", () => {
 
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
-        providerOptions: { openai: { reasoningEffort: "low", user: "user123" } },
-      })
+        providerOptions: {
+          openai: { reasoningEffort: "low", user: "user123" },
+        },
+      }),
     );
   });
 
@@ -157,7 +159,7 @@ describe("prompt command", () => {
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         providerOptions: { openai: { logprobs: true, maxTokens: 1000 } },
-      })
+      }),
     );
   });
 });

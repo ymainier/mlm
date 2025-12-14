@@ -76,19 +76,19 @@ describe("parseProviderOptions", () => {
 
   it("should throw on missing dot separator", () => {
     expect(() => parseProviderOptions(["openai=value"])).toThrow(
-      'Invalid option format: "openai=value". Expected: provider.key=value'
+      'Invalid option format: "openai=value". Expected: provider.key=value',
     );
   });
 
   it("should throw on missing equals sign", () => {
     expect(() => parseProviderOptions(["openai.key"])).toThrow(
-      'Invalid option format: "openai.key". Expected: provider.key=value'
+      'Invalid option format: "openai.key". Expected: provider.key=value',
     );
   });
 
   it("should throw on completely invalid format", () => {
     expect(() => parseProviderOptions(["invalid"])).toThrow(
-      'Invalid option format: "invalid". Expected: provider.key=value'
+      'Invalid option format: "invalid". Expected: provider.key=value',
     );
   });
 });

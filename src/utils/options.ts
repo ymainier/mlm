@@ -9,7 +9,7 @@ export function parseProviderOptions(options: string[]): ProviderOptions {
     const match = opt.match(/^([^.]+)\.([^=]+)=(.*)$/);
     if (!match) {
       throw new Error(
-        `Invalid option format: "${opt}". Expected: provider.key=value`
+        `Invalid option format: "${opt}". Expected: provider.key=value`,
       );
     }
 

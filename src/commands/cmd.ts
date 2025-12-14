@@ -20,16 +20,21 @@ export function cmd() {
       "-o, --option <provider.key=value>",
       "provider option (repeatable)",
       collect,
-      []
+      [],
     )
     .argument("<prompt>", "command to generate (use - for stdin)")
-    .action(async (input: string, { model, option }: { model: string; option: string[] }) => {
-      const system = COMMAND_SYSTEM_PROMPT;
-      const prompt = await getPrompt(input);
-      const providerOptions = parseProviderOptions(option);
-      const onTextPart = process.stdout.write.bind(process.stdout);
-      streamText({ system, model, prompt, providerOptions, onTextPart });
-    });
+    .action(
+      async (
+        input: string,
+        { model, option }: { model: string; option: string[] },
+      ) => {
+        const system = COMMAND_SYSTEM_PROMPT;
+        const prompt = await getPrompt(input);
+        const providerOptions = parseProviderOptions(option);
+        const onTextPart = process.stdout.write.bind(process.stdout);
+        streamText({ system, model, prompt, providerOptions, onTextPart });
+      },
+    );
 
   return cmd;
 }

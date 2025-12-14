@@ -16,7 +16,12 @@ export async function streamText({
   providerOptions = {},
   onTextPart,
 }: StreamTextOptions) {
-  const { textStream } = _streamText({ system, model, providerOptions, prompt });
+  const { textStream } = _streamText({
+    system,
+    model,
+    providerOptions,
+    prompt,
+  });
 
   for await (const textPart of textStream) {
     onTextPart(textPart);

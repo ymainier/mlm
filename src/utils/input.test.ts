@@ -9,7 +9,7 @@ describe("readStdin", () => {
     listeners = {};
 
     vi.spyOn(process.stdin, "setEncoding").mockImplementation(
-      () => process.stdin
+      () => process.stdin,
     );
     vi.spyOn(process.stdin, "on").mockImplementation((event, handler) => {
       listeners[event] = handler;

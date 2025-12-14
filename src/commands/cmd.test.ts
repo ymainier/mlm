@@ -34,7 +34,7 @@ describe("cmd command", () => {
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         prompt: "resolved prompt",
-      })
+      }),
     );
   });
 
@@ -45,9 +45,9 @@ describe("cmd command", () => {
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         system: expect.stringContaining(
-          "Return only the command to be executed as a raw string"
+          "Return only the command to be executed as a raw string",
         ),
-      })
+      }),
     );
   });
 
@@ -58,7 +58,7 @@ describe("cmd command", () => {
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         model: "openai/gpt-5-mini",
-      })
+      }),
     );
   });
 
@@ -75,7 +75,7 @@ describe("cmd command", () => {
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         model: "anthropic/claude-3-haiku",
-      })
+      }),
     );
   });
 
@@ -92,7 +92,7 @@ describe("cmd command", () => {
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         model: "google/gemini-pro",
-      })
+      }),
     );
   });
 
@@ -103,7 +103,7 @@ describe("cmd command", () => {
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         onTextPart: expect.any(Function),
-      })
+      }),
     );
   });
 
@@ -114,7 +114,7 @@ describe("cmd command", () => {
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         providerOptions: {},
-      })
+      }),
     );
   });
 
@@ -131,7 +131,7 @@ describe("cmd command", () => {
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         providerOptions: { openai: { reasoningEffort: "low" } },
-      })
+      }),
     );
   });
 
@@ -149,8 +149,10 @@ describe("cmd command", () => {
 
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
-        providerOptions: { openai: { reasoningEffort: "low", user: "user123" } },
-      })
+        providerOptions: {
+          openai: { reasoningEffort: "low", user: "user123" },
+        },
+      }),
     );
   });
 });

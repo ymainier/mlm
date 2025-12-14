@@ -12,6 +12,8 @@ A Node.js CLI tool inspired by Simon Willison's `llm` for interacting with vario
 - `pnpm test` - Run tests with Vitest (watch mode by default)
 - `pnpm test run` - Run tests once without watch mode
 - `pnpm typecheck` - Run TypeScript type checking
+- `pnpm lint` - Run linting
+- `pnpm format` - Run formatting
 
 ## Architecture
 
@@ -20,6 +22,7 @@ The CLI is built with Commander.js and uses the Vercel AI SDK Gateway (`@ai-sdk/
 **Entry flow:** `src/index.ts` → `src/cli.ts` (registers commands) → `src/commands/*.ts`
 
 **Commands:**
+
 - `prompt` (default) - Send a text prompt to an LLM with optional system prompt
 - `cmd` - Generate shell commands from natural language descriptions
 - `models` - List available models with pricing information
@@ -27,6 +30,7 @@ The CLI is built with Commander.js and uses the Vercel AI SDK Gateway (`@ai-sdk/
 - `image-new` - Generate images using dedicated image generation models (e.g., Imagen)
 
 **Utilities:**
+
 - `src/utils/input.ts` - Handles stdin reading; use `-` as prompt argument to pipe input
 - `src/utils/text.ts` - Wraps AI SDK's streamText for streaming responses to stdout
 
