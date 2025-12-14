@@ -3,7 +3,6 @@ import { generateText } from "ai";
 import { image } from "./image";
 import { getPrompt } from "../utils/input";
 import { writeFile, readFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import { exit } from "node:process";
 
 vi.mock("../utils/input", () => ({ getPrompt: vi.fn() }));

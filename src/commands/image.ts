@@ -2,12 +2,7 @@ import { writeFile, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { exit } from "node:process";
-import {
-  generateText,
-  type ModelMessage,
-  type UserContent,
-  type UserModelMessage,
-} from "ai";
+import { generateText, type UserContent } from "ai";
 import { Command } from "commander";
 import { getPrompt } from "../utils/input";
 import { collect, parseProviderOptions } from "../utils/options";
@@ -37,7 +32,11 @@ export function image() {
     .action(
       async (
         input: string,
-        { model, image, option }: { model: string; image?: string; option: string[] }
+        {
+          model,
+          image,
+          option,
+        }: { model: string; image?: string; option: string[] }
       ) => {
         const system = IMAGE_SYSTEM_PROMPT;
         const prompt = await getPrompt(input);
@@ -52,7 +51,9 @@ export function image() {
 
           content.push({ type: "image", mediaType, image: imageBuffer });
 
-          console.log(`Using input image: ${image}: ${mediaType} ${imageBuffer.length} bytes`);
+          console.log(
+            `Using input image: ${image}: ${mediaType} ${imageBuffer.length} bytes`
+          );
         }
 
         content.push({ type: "text", text: prompt });

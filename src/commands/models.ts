@@ -1,6 +1,5 @@
-import { gateway, type GatewayLanguageModelEntry } from "@ai-sdk/gateway";
+import { gateway } from "@ai-sdk/gateway";
 import { Command } from "commander";
-import { format } from "path";
 import { getBorderCharacters, table } from "table";
 
 const formatter = new Intl.NumberFormat("en-US", {

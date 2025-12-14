@@ -3,7 +3,6 @@ import { experimental_generateImage as generateImage } from "ai";
 import { imageNew } from "./image-new";
 import { getPrompt } from "../utils/input";
 import { writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import { exit } from "node:process";
 
 vi.mock("../utils/input", () => ({ getPrompt: vi.fn() }));

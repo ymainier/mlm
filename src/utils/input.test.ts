@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { readStdin } from "./input";
 
 describe("readStdin", () => {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   let listeners: Record<string, Function>;
 
   beforeEach(() => {
