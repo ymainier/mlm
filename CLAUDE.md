@@ -11,6 +11,7 @@ A Node.js CLI tool inspired by Simon Willison's `llm` for interacting with vario
 - `pnpm dev <prompt>` - Run the CLI in development mode (default command is `prompt`)
 - `pnpm test` - Run tests with Vitest (watch mode by default)
 - `pnpm test run` - Run tests once without watch mode
+- `pnpm typecheck` - Run TypeScript type checking
 
 ## Architecture
 
