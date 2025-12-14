@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { prompt } from "./prompt";
+import { cmd } from "./cmd";
 import { getPrompt } from "../utils/input";
 import { streamText } from "../utils/text";
 
@@ -7,29 +7,29 @@ vi.mock("../utils/input", () => ({ getPrompt: vi.fn() }));
 
 vi.mock("../utils/text", () => ({ streamText: vi.fn() }));
 
-describe("prompt command", () => {
+describe("cmd command", () => {
   beforeEach(() => {
     vi.mocked(getPrompt).mockImplementation(async (input) => input);
     vi.mocked(streamText).mockResolvedValue(undefined);
   });
 
-  it("should create a command named 'prompt'", () => {
-    const cmd = prompt();
-    expect(cmd.name()).toBe("prompt");
+  it("should create a command named 'cmd'", () => {
+    const command = cmd();
+    expect(command.name()).toBe("cmd");
   });
 
   it("should call getPrompt with the input argument", async () => {
-    const cmd = prompt();
-    await cmd.parseAsync(["node", "test", "test prompt"]);
+    const command = cmd();
+    await command.parseAsync(["node", "test", "undo last git commit"]);
 
-    expect(getPrompt).toHaveBeenCalledWith("test prompt");
+    expect(getPrompt).toHaveBeenCalledWith("undo last git commit");
   });
 
   it("should call streamText with the resolved prompt", async () => {
     vi.mocked(getPrompt).mockResolvedValue("resolved prompt");
 
-    const cmd = prompt();
-    await cmd.parseAsync(["node", "test", "input"]);
+    const command = cmd();
+    await command.parseAsync(["node", "test", "input"]);
 
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -38,9 +38,22 @@ describe("prompt command", () => {
     );
   });
 
+  it("should include the command-specific system prompt", async () => {
+    const command = cmd();
+    await command.parseAsync(["node", "test", "hello world"]);
+
+    expect(streamText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        system: expect.stringContaining(
+          "Return only the command to be executed as a raw string"
+        ),
+      })
+    );
+  });
+
   it("should use default model openai/gpt-5-mini", async () => {
-    const cmd = prompt();
-    await cmd.parseAsync(["node", "test", "test prompt"]);
+    const command = cmd();
+    await command.parseAsync(["node", "test", "test prompt"]);
 
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -50,8 +63,8 @@ describe("prompt command", () => {
   });
 
   it("should accept a custom model via -m option", async () => {
-    const cmd = prompt();
-    await cmd.parseAsync([
+    const command = cmd();
+    await command.parseAsync([
       "node",
       "test",
       "-m",
@@ -66,27 +79,26 @@ describe("prompt command", () => {
     );
   });
 
-  it("should accept a system prompt option", async () => {
-    const cmd = prompt();
-    await cmd.parseAsync([
+  it("should accept a custom model via --model option", async () => {
+    const command = cmd();
+    await command.parseAsync([
       "node",
       "test",
-      "--system",
-      "You are a helpful assistant.",
+      "--model",
+      "google/gemini-pro",
       "test prompt",
     ]);
 
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
-        system: "You are a helpful assistant.",
-        prompt: "test prompt",
+        model: "google/gemini-pro",
       })
     );
   });
 
   it("should pass onTextPart callback bound to stdout.write", async () => {
-    const cmd = prompt();
-    await cmd.parseAsync(["node", "test", "test"]);
+    const command = cmd();
+    await command.parseAsync(["node", "test", "test"]);
 
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
