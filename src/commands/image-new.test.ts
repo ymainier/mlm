@@ -22,6 +22,12 @@ vi.mock("node:process", () => ({
   exit: vi.fn(),
 }));
 
+function createMockImageResult(
+  images: Array<{ base64: string; mediaType: string }>
+): Awaited<ReturnType<typeof generateImage>> {
+  return { images } as unknown as Awaited<ReturnType<typeof generateImage>>;
+}
+
 describe("image-new command", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -37,9 +43,9 @@ describe("image-new command", () => {
   });
 
   it("should call generateImage with prompt and model", async () => {
-    vi.mocked(generateImage).mockResolvedValue({
-      images: [{ base64: "aGVsbG8=", mediaType: "image/png" }],
-    } as Awaited<ReturnType<typeof generateImage>>);
+    vi.mocked(generateImage).mockResolvedValue(
+      createMockImageResult([{ base64: "aGVsbG8=", mediaType: "image/png" }])
+    );
 
     const cmd = imageNew();
     await cmd.parseAsync(["node", "test", "a beautiful sunset"]);
@@ -51,9 +57,9 @@ describe("image-new command", () => {
   });
 
   it("should use custom model when specified", async () => {
-    vi.mocked(generateImage).mockResolvedValue({
-      images: [{ base64: "aGVsbG8=", mediaType: "image/png" }],
-    } as Awaited<ReturnType<typeof generateImage>>);
+    vi.mocked(generateImage).mockResolvedValue(
+      createMockImageResult([{ base64: "aGVsbG8=", mediaType: "image/png" }])
+    );
 
     const cmd = imageNew();
     await cmd.parseAsync([
@@ -72,9 +78,9 @@ describe("image-new command", () => {
 
   it("should write generated images to temp directory", async () => {
     const base64Data = Buffer.from("fake image data").toString("base64");
-    vi.mocked(generateImage).mockResolvedValue({
-      images: [{ base64: base64Data, mediaType: "image/png" }],
-    } as Awaited<ReturnType<typeof generateImage>>);
+    vi.mocked(generateImage).mockResolvedValue(
+      createMockImageResult([{ base64: base64Data, mediaType: "image/png" }])
+    );
 
     const cmd = imageNew();
     await cmd.parseAsync(["node", "test", "a cat"]);
@@ -86,12 +92,12 @@ describe("image-new command", () => {
   });
 
   it("should handle multiple generated images", async () => {
-    vi.mocked(generateImage).mockResolvedValue({
-      images: [
+    vi.mocked(generateImage).mockResolvedValue(
+      createMockImageResult([
         { base64: "YQ==", mediaType: "image/png" },
         { base64: "Yg==", mediaType: "image/jpeg" },
-      ],
-    } as Awaited<ReturnType<typeof generateImage>>);
+      ])
+    );
 
     const cmd = imageNew();
     await cmd.parseAsync(["node", "test", "two images"]);
@@ -115,9 +121,7 @@ describe("image-new command", () => {
   });
 
   it("should exit with code 1 when no images are generated", async () => {
-    vi.mocked(generateImage).mockResolvedValue({
-      images: [],
-    } as Awaited<ReturnType<typeof generateImage>>);
+    vi.mocked(generateImage).mockResolvedValue(createMockImageResult([]));
 
     const cmd = imageNew();
     await cmd.parseAsync(["node", "test", "empty result"]);
@@ -127,13 +131,13 @@ describe("image-new command", () => {
   });
 
   it("should log the count of generated images", async () => {
-    vi.mocked(generateImage).mockResolvedValue({
-      images: [
+    vi.mocked(generateImage).mockResolvedValue(
+      createMockImageResult([
         { base64: "YQ==", mediaType: "image/png" },
         { base64: "Yg==", mediaType: "image/png" },
         { base64: "Yw==", mediaType: "image/png" },
-      ],
-    } as Awaited<ReturnType<typeof generateImage>>);
+      ])
+    );
 
     const cmd = imageNew();
     await cmd.parseAsync(["node", "test", "three images"]);

@@ -23,6 +23,12 @@ vi.mock("node:process", () => ({
   exit: vi.fn(),
 }));
 
+function createMockTextResult(
+  files: Array<{ mediaType: string; uint8Array: Uint8Array }>
+): Awaited<ReturnType<typeof generateText>> {
+  return { files } as unknown as Awaited<ReturnType<typeof generateText>>;
+}
+
 describe("image command", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -37,14 +43,11 @@ describe("image command", () => {
   });
 
   it("should call generateText with prompt and system message", async () => {
-    vi.mocked(generateText).mockResolvedValue({
-      files: [
-        {
-          mediaType: "image/png",
-          uint8Array: new Uint8Array([1, 2, 3]),
-        },
-      ],
-    } as Awaited<ReturnType<typeof generateText>>);
+    vi.mocked(generateText).mockResolvedValue(
+      createMockTextResult([
+        { mediaType: "image/png", uint8Array: new Uint8Array([1, 2, 3]) },
+      ])
+    );
 
     const cmd = image();
     await cmd.parseAsync(["node", "test", "a cat"]);
@@ -66,9 +69,9 @@ describe("image command", () => {
   });
 
   it("should use custom model when specified", async () => {
-    vi.mocked(generateText).mockResolvedValue({
-      files: [{ mediaType: "image/png", uint8Array: new Uint8Array([1]) }],
-    } as Awaited<ReturnType<typeof generateText>>);
+    vi.mocked(generateText).mockResolvedValue(
+      createMockTextResult([{ mediaType: "image/png", uint8Array: new Uint8Array([1]) }])
+    );
 
     const cmd = image();
     await cmd.parseAsync(["node", "test", "-m", "openai/gpt-4-vision", "a dog"]);
@@ -83,9 +86,9 @@ describe("image command", () => {
   it("should read and include input image when provided", async () => {
     const mockImageBuffer = Buffer.from("fake image data");
     vi.mocked(readFile).mockResolvedValue(mockImageBuffer);
-    vi.mocked(generateText).mockResolvedValue({
-      files: [{ mediaType: "image/png", uint8Array: new Uint8Array([1]) }],
-    } as Awaited<ReturnType<typeof generateText>>);
+    vi.mocked(generateText).mockResolvedValue(
+      createMockTextResult([{ mediaType: "image/png", uint8Array: new Uint8Array([1]) }])
+    );
 
     const cmd = image();
     await cmd.parseAsync([
@@ -117,9 +120,9 @@ describe("image command", () => {
   it("should detect jpeg media type for jpg images", async () => {
     const mockImageBuffer = Buffer.from("fake jpeg data");
     vi.mocked(readFile).mockResolvedValue(mockImageBuffer);
-    vi.mocked(generateText).mockResolvedValue({
-      files: [{ mediaType: "image/png", uint8Array: new Uint8Array([1]) }],
-    } as Awaited<ReturnType<typeof generateText>>);
+    vi.mocked(generateText).mockResolvedValue(
+      createMockTextResult([{ mediaType: "image/png", uint8Array: new Uint8Array([1]) }])
+    );
 
     const cmd = image();
     await cmd.parseAsync([
@@ -148,9 +151,9 @@ describe("image command", () => {
 
   it("should write generated images to temp directory", async () => {
     const mockUint8Array = new Uint8Array([1, 2, 3, 4]);
-    vi.mocked(generateText).mockResolvedValue({
-      files: [{ mediaType: "image/png", uint8Array: mockUint8Array }],
-    } as Awaited<ReturnType<typeof generateText>>);
+    vi.mocked(generateText).mockResolvedValue(
+      createMockTextResult([{ mediaType: "image/png", uint8Array: mockUint8Array }])
+    );
 
     const cmd = image();
     await cmd.parseAsync(["node", "test", "a sunset"]);
@@ -162,9 +165,7 @@ describe("image command", () => {
   });
 
   it("should exit with code 1 when no images are generated", async () => {
-    vi.mocked(generateText).mockResolvedValue({
-      files: [],
-    } as Awaited<ReturnType<typeof generateText>>);
+    vi.mocked(generateText).mockResolvedValue(createMockTextResult([]));
 
     const cmd = image();
     await cmd.parseAsync(["node", "test", "something"]);
@@ -174,12 +175,12 @@ describe("image command", () => {
   });
 
   it("should handle multiple generated images", async () => {
-    vi.mocked(generateText).mockResolvedValue({
-      files: [
+    vi.mocked(generateText).mockResolvedValue(
+      createMockTextResult([
         { mediaType: "image/png", uint8Array: new Uint8Array([1]) },
         { mediaType: "image/jpeg", uint8Array: new Uint8Array([2]) },
-      ],
-    } as Awaited<ReturnType<typeof generateText>>);
+      ])
+    );
 
     const cmd = image();
     await cmd.parseAsync(["node", "test", "two images"]);
