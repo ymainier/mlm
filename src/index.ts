@@ -1,4 +1,5 @@
 #! /usr/bin/env tsx
+import "dotenv/config";
 import { cli } from "./cli";
 
 try {
