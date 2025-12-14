@@ -10,6 +10,7 @@ import {
 } from "ai";
 import { Command } from "commander";
 import { getPrompt } from "../utils/input";
+import { collect, parseProviderOptions } from "../utils/options";
 
 const IMAGE_SYSTEM_PROMPT = `
 You are an AI model specialized in generating images based on textual descriptions.
@@ -26,11 +27,17 @@ export function image() {
       "google/gemini-2.5-flash-image"
     )
     .option("-i, --image <path>", "path to input image file")
+    .option(
+      "-o, --option <provider.key=value>",
+      "provider option (repeatable)",
+      collect,
+      []
+    )
     .argument("<prompt>", "description of the image (use - for stdin)")
     .action(
       async (
         input: string,
-        { model, image }: { model: string; image?: string }
+        { model, image, option }: { model: string; image?: string; option: string[] }
       ) => {
         const system = IMAGE_SYSTEM_PROMPT;
         const prompt = await getPrompt(input);
@@ -50,10 +57,12 @@ export function image() {
 
         content.push({ type: "text", text: prompt });
 
+        const providerOptions = parseProviderOptions(option);
         const result = await generateText({
           system,
           model,
           prompt: [{ role: "user", content }],
+          providerOptions,
         });
 
         // Save generated images to local filesystem

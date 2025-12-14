@@ -57,8 +57,10 @@ describe("streamText", () => {
     });
 
     expect(aiStreamText).toHaveBeenCalledWith({
+      system: undefined,
       model: "anthropic/claude-3-haiku",
       prompt: "hello world",
+      providerOptions: {},
     });
   });
 
@@ -77,6 +79,7 @@ describe("streamText", () => {
       system: "You are a helpful assistant.",
       model: "openai/gpt-5-mini",
       prompt: "test",
+      providerOptions: {},
     });
   });
 

@@ -106,4 +106,51 @@ describe("cmd command", () => {
       })
     );
   });
+
+  it("should pass empty providerOptions by default", async () => {
+    const command = cmd();
+    await command.parseAsync(["node", "test", "test"]);
+
+    expect(streamText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        providerOptions: {},
+      })
+    );
+  });
+
+  it("should parse single -o option into providerOptions", async () => {
+    const command = cmd();
+    await command.parseAsync([
+      "node",
+      "test",
+      "-o",
+      "openai.reasoningEffort=low",
+      "test",
+    ]);
+
+    expect(streamText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        providerOptions: { openai: { reasoningEffort: "low" } },
+      })
+    );
+  });
+
+  it("should parse multiple -o options into providerOptions", async () => {
+    const command = cmd();
+    await command.parseAsync([
+      "node",
+      "test",
+      "-o",
+      "openai.reasoningEffort=low",
+      "-o",
+      "openai.user=user123",
+      "test",
+    ]);
+
+    expect(streamText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        providerOptions: { openai: { reasoningEffort: "low", user: "user123" } },
+      })
+    );
+  });
 });

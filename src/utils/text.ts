@@ -1,10 +1,11 @@
 import { streamText as _streamText } from "ai";
-import { on } from "events";
+import type { ProviderOptions } from "./options";
 
 type StreamTextOptions = {
   system?: string;
   model: string;
   prompt: string;
+  providerOptions?: ProviderOptions;
   onTextPart: (textPart: string) => void;
 };
 
@@ -12,9 +13,10 @@ export async function streamText({
   system,
   model,
   prompt,
+  providerOptions = {},
   onTextPart,
 }: StreamTextOptions) {
-  const { textStream } = _streamText({ system, model, prompt });
+  const { textStream } = _streamText({ system, model, providerOptions, prompt });
 
   for await (const textPart of textStream) {
     onTextPart(textPart);

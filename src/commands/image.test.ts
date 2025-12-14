@@ -195,4 +195,63 @@ describe("image command", () => {
       expect.any(Uint8Array)
     );
   });
+
+  it("should pass empty providerOptions by default", async () => {
+    vi.mocked(generateText).mockResolvedValue(
+      createMockTextResult([{ mediaType: "image/png", uint8Array: new Uint8Array([1]) }])
+    );
+
+    const cmd = image();
+    await cmd.parseAsync(["node", "test", "test"]);
+
+    expect(generateText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        providerOptions: {},
+      })
+    );
+  });
+
+  it("should parse single -o option into providerOptions", async () => {
+    vi.mocked(generateText).mockResolvedValue(
+      createMockTextResult([{ mediaType: "image/png", uint8Array: new Uint8Array([1]) }])
+    );
+
+    const cmd = image();
+    await cmd.parseAsync([
+      "node",
+      "test",
+      "-o",
+      "google.safetySettings=none",
+      "test",
+    ]);
+
+    expect(generateText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        providerOptions: { google: { safetySettings: "none" } },
+      })
+    );
+  });
+
+  it("should parse multiple -o options into providerOptions", async () => {
+    vi.mocked(generateText).mockResolvedValue(
+      createMockTextResult([{ mediaType: "image/png", uint8Array: new Uint8Array([1]) }])
+    );
+
+    const cmd = image();
+    await cmd.parseAsync([
+      "node",
+      "test",
+      "-o",
+      "google.safetySettings=none",
+      "-o",
+      "google.maxTokens=2000",
+      "test",
+    ]);
+
+    expect(generateText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        providerOptions: { google: { safetySettings: "none", maxTokens: 2000 } },
+      })
+    );
+  });
 });

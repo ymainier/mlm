@@ -1,5 +1,6 @@
 import { Command } from "commander";
 import { getPrompt } from "../utils/input";
+import { collect, parseProviderOptions } from "../utils/options";
 import { streamText } from "../utils/text";
 
 const COMMAND_SYSTEM_PROMPT = `
@@ -15,12 +16,19 @@ export function cmd() {
 
   cmd
     .option("-m, --model <provider/model>", "model to use", "openai/gpt-5-mini")
+    .option(
+      "-o, --option <provider.key=value>",
+      "provider option (repeatable)",
+      collect,
+      []
+    )
     .argument("<prompt>", "command to generate (use - for stdin)")
-    .action(async (input: string, { model }: { model: string }) => {
+    .action(async (input: string, { model, option }: { model: string; option: string[] }) => {
       const system = COMMAND_SYSTEM_PROMPT;
       const prompt = await getPrompt(input);
+      const providerOptions = parseProviderOptions(option);
       const onTextPart = process.stdout.write.bind(process.stdout);
-      streamText({ system, model, prompt, onTextPart });
+      streamText({ system, model, prompt, providerOptions, onTextPart });
     });
 
   return cmd;

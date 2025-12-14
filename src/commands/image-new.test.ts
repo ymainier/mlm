@@ -53,6 +53,7 @@ describe("image-new command", () => {
     expect(generateImage).toHaveBeenCalledWith({
       model: "google/imagen-4.0-fast-generate-001",
       prompt: "a beautiful sunset",
+      providerOptions: {},
     });
   });
 
@@ -73,6 +74,7 @@ describe("image-new command", () => {
     expect(generateImage).toHaveBeenCalledWith({
       model: "stability/stable-diffusion-3",
       prompt: "a dog",
+      providerOptions: {},
     });
   });
 
@@ -143,5 +145,49 @@ describe("image-new command", () => {
     await cmd.parseAsync(["node", "test", "three images"]);
 
     expect(console.log).toHaveBeenCalledWith("Generated 3 image(s).");
+  });
+
+  it("should parse single -o option into providerOptions", async () => {
+    vi.mocked(generateImage).mockResolvedValue(
+      createMockImageResult([{ base64: "YQ==", mediaType: "image/png" }])
+    );
+
+    const cmd = imageNew();
+    await cmd.parseAsync([
+      "node",
+      "test",
+      "-o",
+      "google.aspectRatio=16:9",
+      "test",
+    ]);
+
+    expect(generateImage).toHaveBeenCalledWith({
+      model: "google/imagen-4.0-fast-generate-001",
+      prompt: "test",
+      providerOptions: { google: { aspectRatio: "16:9" } },
+    });
+  });
+
+  it("should parse multiple -o options into providerOptions", async () => {
+    vi.mocked(generateImage).mockResolvedValue(
+      createMockImageResult([{ base64: "YQ==", mediaType: "image/png" }])
+    );
+
+    const cmd = imageNew();
+    await cmd.parseAsync([
+      "node",
+      "test",
+      "-o",
+      "google.aspectRatio=16:9",
+      "-o",
+      "google.numberOfImages=4",
+      "test",
+    ]);
+
+    expect(generateImage).toHaveBeenCalledWith({
+      model: "google/imagen-4.0-fast-generate-001",
+      prompt: "test",
+      providerOptions: { google: { aspectRatio: "16:9", numberOfImages: 4 } },
+    });
   });
 });
