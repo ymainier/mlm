@@ -139,4 +139,56 @@ describe("models command", () => {
     // Prices are multiplied by 1_000_000 and formatted as currency
     expect(output).toMatch(/\$[\d,.]+/);
   });
+
+  it("should output only model names with --only-model", async () => {
+    const cmd = models();
+    await cmd.parseAsync(["node", "test", "--only-model"]);
+
+    expect(console.log).toHaveBeenCalledTimes(4);
+    const calls = vi.mocked(console.log).mock.calls.map((c) => c[0]);
+    expect(calls).toContain("openai/gpt-4");
+    expect(calls).toContain("openai/gpt-3.5-turbo");
+    expect(calls).toContain("openai/text-embedding-3-small");
+    expect(calls).toContain("openai/dall-e-3");
+  });
+
+  it("should output only model names with -o shorthand", async () => {
+    const cmd = models();
+    await cmd.parseAsync(["node", "test", "-o"]);
+
+    expect(console.log).toHaveBeenCalledTimes(4);
+  });
+
+  it("should filter by type with --only-model", async () => {
+    const cmd = models();
+    await cmd.parseAsync(["node", "test", "--only-model", "-t", "language"]);
+
+    expect(console.log).toHaveBeenCalledTimes(2);
+    const calls = vi.mocked(console.log).mock.calls.map((c) => c[0]);
+    expect(calls).toContain("openai/gpt-4");
+    expect(calls).toContain("openai/gpt-3.5-turbo");
+    expect(calls).not.toContain("openai/dall-e-3");
+  });
+
+  it("should sort with --only-model", async () => {
+    const cmd = models();
+    await cmd.parseAsync(["node", "test", "--only-model"]);
+
+    const calls = vi.mocked(console.log).mock.calls.map((c) => c[0]);
+    // Models should be alphabetically sorted by default
+    expect(calls[0]).toBe("openai/dall-e-3");
+    expect(calls[1]).toBe("openai/gpt-3.5-turbo");
+    expect(calls[2]).toBe("openai/gpt-4");
+    expect(calls[3]).toBe("openai/text-embedding-3-small");
+  });
+
+  it("should not include pricing info with --only-model", async () => {
+    const cmd = models();
+    await cmd.parseAsync(["node", "test", "--only-model"]);
+
+    const calls = vi.mocked(console.log).mock.calls.map((c) => c[0] as string);
+    calls.forEach((output) => {
+      expect(output).not.toMatch(/\$/);
+    });
+  });
 });

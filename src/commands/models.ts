@@ -29,7 +29,17 @@ export function models() {
       'sort by "model", "input" price or "output" price',
       "model"
     )
-    .action(async ({ type, sort }: { type: string; sort: string }) => {
+    .option("-o, --only-model", "only display model names")
+    .action(
+      async ({
+        type,
+        sort,
+        onlyModel,
+      }: {
+        type: string;
+        sort: string;
+        onlyModel: boolean;
+      }) => {
       const modelType = MODEL_TYPES.includes(
         type.toLowerCase() as (typeof MODEL_TYPES)[number]
       )
@@ -64,15 +74,25 @@ export function models() {
             return comparison !== 0 ? comparison : a[2] - b[2];
           }
           return a[0].localeCompare(b[0]);
-        })
-        .map(([a, b, c, d]) => [a, b, toPrice(c), toPrice(d)]);
+        });
 
-      const output = table(data, {
-        border: getBorderCharacters("void"),
-        drawHorizontalLine: () => false,
-      });
-      console.log(output);
-    });
+        if (onlyModel) {
+          data.forEach(([modelId]) => console.log(modelId));
+        } else {
+          const formatted = data.map(([a, b, c, d]) => [
+            a,
+            b,
+            toPrice(c),
+            toPrice(d),
+          ]);
+          const output = table(formatted, {
+            border: getBorderCharacters("void"),
+            drawHorizontalLine: () => false,
+          });
+          console.log(output);
+        }
+      }
+    );
 
   return cmd;
 }
