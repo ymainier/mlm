@@ -5,7 +5,7 @@ import { imageNew } from "./commands/image-new";
 import { models } from "./commands/models";
 import { prompt } from "./commands/prompt";
 
-export async function main() {
+export async function cli() {
   program.addCommand(cmd());
   program.addCommand(image());
   program.addCommand(imageNew());

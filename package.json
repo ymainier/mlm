@@ -1,7 +1,7 @@
 {
-  "name": "llm",
+  "name": "mlm",
   "version": "1.0.0",
-  "description": "nodejs clone of simon willison's llm",
+  "description": "CLI to interact with LLMs, heavily inpired from simon willison's llm",
   "main": "src/index.ts",
   "type": "module",
   "scripts": {

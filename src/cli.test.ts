@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { Command, program } from "commander";
-import { main } from "./cli";
+import { cli } from "./cli";
 import { prompt } from "./commands/prompt";
 
 vi.mock("./commands/prompt");
@@ -12,7 +12,7 @@ describe("cli", () => {
     vi.spyOn(program, "addCommand").mockImplementation(() => program);
     vi.spyOn(program, "parseAsync").mockResolvedValue(undefined as never);
 
-    await main();
+    await cli();
 
     expect(program.addCommand).toHaveBeenCalledWith(mockPromptCommand, {
       isDefault: true,
@@ -23,7 +23,7 @@ describe("cli", () => {
     vi.spyOn(program, "addCommand").mockImplementation(() => program);
     vi.spyOn(program, "parseAsync").mockResolvedValue(undefined as never);
 
-    await main();
+    await cli();
 
     expect(program.parseAsync).toHaveBeenCalled();
   });
