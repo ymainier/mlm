@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { generateText } from "ai";
 import { image } from "./image";
 import { getPrompt } from "../utils/input";
-import { save } from "../utils/images";
+import { save, validateOutputPaths } from "../utils/images";
 import { readFile } from "node:fs/promises";
 import { exit } from "node:process";
 
@@ -12,6 +12,7 @@ vi.mock("ai", () => ({ generateText: vi.fn() }));
 
 vi.mock("../utils/images", () => ({
   save: vi.fn(),
+  validateOutputPaths: vi.fn(),
 }));
 
 vi.mock("node:fs/promises", () => ({
@@ -23,7 +24,7 @@ vi.mock("node:process", () => ({
 }));
 
 function createMockTextResult(
-  files: Array<{ mediaType: string; uint8Array: Uint8Array }>,
+  files: Array<{ mediaType: string; uint8Array: Uint8Array }>
 ): Awaited<ReturnType<typeof generateText>> {
   return { files } as unknown as Awaited<ReturnType<typeof generateText>>;
 }
@@ -46,7 +47,7 @@ describe("image command", () => {
     vi.mocked(generateText).mockResolvedValue(
       createMockTextResult([
         { mediaType: "image/png", uint8Array: new Uint8Array([1, 2, 3]) },
-      ]),
+      ])
     );
 
     const cmd = image();
@@ -64,7 +65,7 @@ describe("image command", () => {
             ]),
           }),
         ]),
-      }),
+      })
     );
   });
 
@@ -72,7 +73,7 @@ describe("image command", () => {
     vi.mocked(generateText).mockResolvedValue(
       createMockTextResult([
         { mediaType: "image/png", uint8Array: new Uint8Array([1]) },
-      ]),
+      ])
     );
 
     const cmd = image();
@@ -87,7 +88,7 @@ describe("image command", () => {
     expect(generateText).toHaveBeenCalledWith(
       expect.objectContaining({
         model: "openai/gpt-4-vision",
-      }),
+      })
     );
   });
 
@@ -97,7 +98,7 @@ describe("image command", () => {
     vi.mocked(generateText).mockResolvedValue(
       createMockTextResult([
         { mediaType: "image/png", uint8Array: new Uint8Array([1]) },
-      ]),
+      ])
     );
 
     const cmd = image();
@@ -123,7 +124,7 @@ describe("image command", () => {
             ]),
           }),
         ]),
-      }),
+      })
     );
   });
 
@@ -133,7 +134,7 @@ describe("image command", () => {
     vi.mocked(generateText).mockResolvedValue(
       createMockTextResult([
         { mediaType: "image/png", uint8Array: new Uint8Array([1]) },
-      ]),
+      ])
     );
 
     const cmd = image();
@@ -157,7 +158,7 @@ describe("image command", () => {
             ]),
           }),
         ]),
-      }),
+      })
     );
   });
 
@@ -166,18 +167,21 @@ describe("image command", () => {
     vi.mocked(generateText).mockResolvedValue(
       createMockTextResult([
         { mediaType: "image/png", uint8Array: mockUint8Array },
-      ]),
+      ])
     );
 
     const cmd = image();
     await cmd.parseAsync(["node", "test", "a sunset"]);
 
-    expect(save).toHaveBeenCalledWith([
-      expect.objectContaining({
-        mediaType: "image/png",
-        uint8Array: mockUint8Array,
-      }),
-    ]);
+    expect(save).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          mediaType: "image/png",
+          uint8Array: mockUint8Array,
+        }),
+      ],
+      []
+    );
   });
 
   it("should exit with code 1 when no images are generated", async () => {
@@ -195,23 +199,26 @@ describe("image command", () => {
       createMockTextResult([
         { mediaType: "image/png", uint8Array: new Uint8Array([1]) },
         { mediaType: "image/jpeg", uint8Array: new Uint8Array([2]) },
-      ]),
+      ])
     );
 
     const cmd = image();
     await cmd.parseAsync(["node", "test", "two images"]);
 
-    expect(save).toHaveBeenCalledWith([
-      expect.objectContaining({ mediaType: "image/png" }),
-      expect.objectContaining({ mediaType: "image/jpeg" }),
-    ]);
+    expect(save).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({ mediaType: "image/png" }),
+        expect.objectContaining({ mediaType: "image/jpeg" }),
+      ],
+      []
+    );
   });
 
   it("should pass empty providerOptions by default", async () => {
     vi.mocked(generateText).mockResolvedValue(
       createMockTextResult([
         { mediaType: "image/png", uint8Array: new Uint8Array([1]) },
-      ]),
+      ])
     );
 
     const cmd = image();
@@ -220,7 +227,7 @@ describe("image command", () => {
     expect(generateText).toHaveBeenCalledWith(
       expect.objectContaining({
         providerOptions: {},
-      }),
+      })
     );
   });
 
@@ -228,7 +235,7 @@ describe("image command", () => {
     vi.mocked(generateText).mockResolvedValue(
       createMockTextResult([
         { mediaType: "image/png", uint8Array: new Uint8Array([1]) },
-      ]),
+      ])
     );
 
     const cmd = image();
@@ -243,7 +250,7 @@ describe("image command", () => {
     expect(generateText).toHaveBeenCalledWith(
       expect.objectContaining({
         providerOptions: { google: { safetySettings: "none" } },
-      }),
+      })
     );
   });
 
@@ -251,7 +258,7 @@ describe("image command", () => {
     vi.mocked(generateText).mockResolvedValue(
       createMockTextResult([
         { mediaType: "image/png", uint8Array: new Uint8Array([1]) },
-      ]),
+      ])
     );
 
     const cmd = image();
@@ -270,7 +277,86 @@ describe("image command", () => {
         providerOptions: {
           google: { safetySettings: "none", maxTokens: 2000 },
         },
-      }),
+      })
     );
+  });
+
+  it("should pass -O output paths to save", async () => {
+    vi.mocked(generateText).mockResolvedValue(
+      createMockTextResult([
+        { mediaType: "image/png", uint8Array: new Uint8Array([1]) },
+      ])
+    );
+
+    const cmd = image();
+    await cmd.parseAsync([
+      "node",
+      "test",
+      "-O",
+      "/custom/output.png",
+      "a sunset",
+    ]);
+
+    expect(save).toHaveBeenCalledWith(expect.any(Array), [
+      "/custom/output.png",
+    ]);
+  });
+
+  it("should pass multiple -O output paths to save", async () => {
+    vi.mocked(generateText).mockResolvedValue(
+      createMockTextResult([
+        { mediaType: "image/png", uint8Array: new Uint8Array([1]) },
+        { mediaType: "image/jpeg", uint8Array: new Uint8Array([2]) },
+      ])
+    );
+
+    const cmd = image();
+    await cmd.parseAsync([
+      "node",
+      "test",
+      "-O",
+      "/path/one.png",
+      "-O",
+      "/path/two.jpg",
+      "two images",
+    ]);
+
+    expect(save).toHaveBeenCalledWith(expect.any(Array), [
+      "/path/one.png",
+      "/path/two.jpg",
+    ]);
+  });
+
+  it("should validate output paths before calling generateText", async () => {
+    vi.mocked(generateText).mockResolvedValue(
+      createMockTextResult([
+        { mediaType: "image/png", uint8Array: new Uint8Array([1]) },
+      ])
+    );
+
+    const cmd = image();
+    await cmd.parseAsync(["node", "test", "-O", "/custom/output.png", "test"]);
+
+    expect(validateOutputPaths).toHaveBeenCalledWith(["/custom/output.png"]);
+    expect(validateOutputPaths).toHaveBeenCalledBefore(vi.mocked(generateText));
+  });
+
+  it("should exit with code 1 when output validation fails", async () => {
+    vi.mocked(validateOutputPaths).mockRejectedValue(
+      new Error("Output file already exists: /existing/file.png")
+    );
+    vi.mocked(generateText).mockResolvedValue(
+      createMockTextResult([
+        { mediaType: "image/png", uint8Array: new Uint8Array([1]) },
+      ])
+    );
+
+    const cmd = image();
+    await cmd.parseAsync(["node", "test", "-O", "/existing/file.png", "test"]);
+
+    expect(console.error).toHaveBeenCalledWith(
+      "Output file already exists: /existing/file.png"
+    );
+    expect(exit).toHaveBeenCalledWith(1);
   });
 });

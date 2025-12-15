@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { experimental_generateImage as generateImage } from "ai";
 import { imageNew } from "./image-new";
 import { getPrompt } from "../utils/input";
-import { save } from "../utils/images";
+import { save, validateOutputPaths } from "../utils/images";
 import { exit } from "node:process";
 
 vi.mock("../utils/input", () => ({ getPrompt: vi.fn() }));
@@ -11,6 +11,7 @@ vi.mock("ai", () => ({ experimental_generateImage: vi.fn() }));
 
 vi.mock("../utils/images", () => ({
   save: vi.fn(),
+  validateOutputPaths: vi.fn(),
 }));
 
 vi.mock("node:process", () => ({
@@ -82,9 +83,10 @@ describe("image-new command", () => {
     const cmd = imageNew();
     await cmd.parseAsync(["node", "test", "a cat"]);
 
-    expect(save).toHaveBeenCalledWith([
-      expect.objectContaining({ mediaType: "image/png" }),
-    ]);
+    expect(save).toHaveBeenCalledWith(
+      [expect.objectContaining({ mediaType: "image/png" })],
+      [],
+    );
   });
 
   it("should call save with multiple generated images", async () => {
@@ -102,10 +104,13 @@ describe("image-new command", () => {
     const cmd = imageNew();
     await cmd.parseAsync(["node", "test", "two images"]);
 
-    expect(save).toHaveBeenCalledWith([
-      expect.objectContaining({ mediaType: "image/png" }),
-      expect.objectContaining({ mediaType: "image/jpeg" }),
-    ]);
+    expect(save).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({ mediaType: "image/png" }),
+        expect.objectContaining({ mediaType: "image/jpeg" }),
+      ],
+      [],
+    );
   });
 
   it("should exit with code 1 when generateImage throws an error", async () => {
@@ -174,5 +179,74 @@ describe("image-new command", () => {
       prompt: "test",
       providerOptions: { google: { aspectRatio: "16:9", numberOfImages: 4 } },
     });
+  });
+
+  it("should pass -O output paths to save", async () => {
+    vi.mocked(generateImage).mockResolvedValue(
+      createMockImageResult([{ base64: "YQ==", mediaType: "image/png" }]),
+    );
+
+    const cmd = imageNew();
+    await cmd.parseAsync(["node", "test", "-O", "/custom/output.png", "a cat"]);
+
+    expect(save).toHaveBeenCalledWith(expect.any(Array), [
+      "/custom/output.png",
+    ]);
+  });
+
+  it("should pass multiple -O output paths to save", async () => {
+    vi.mocked(generateImage).mockResolvedValue(
+      createMockImageResult([
+        { base64: "YQ==", mediaType: "image/png" },
+        { base64: "Yg==", mediaType: "image/jpeg" },
+      ]),
+    );
+
+    const cmd = imageNew();
+    await cmd.parseAsync([
+      "node",
+      "test",
+      "-O",
+      "/path/one.png",
+      "-O",
+      "/path/two.jpg",
+      "two cats",
+    ]);
+
+    expect(save).toHaveBeenCalledWith(expect.any(Array), [
+      "/path/one.png",
+      "/path/two.jpg",
+    ]);
+  });
+
+  it("should validate output paths before calling generateImage", async () => {
+    vi.mocked(generateImage).mockResolvedValue(
+      createMockImageResult([{ base64: "YQ==", mediaType: "image/png" }]),
+    );
+
+    const cmd = imageNew();
+    await cmd.parseAsync(["node", "test", "-O", "/custom/output.png", "test"]);
+
+    expect(validateOutputPaths).toHaveBeenCalledWith(["/custom/output.png"]);
+    expect(validateOutputPaths).toHaveBeenCalledBefore(
+      vi.mocked(generateImage),
+    );
+  });
+
+  it("should exit with code 1 when output validation fails", async () => {
+    vi.mocked(validateOutputPaths).mockRejectedValue(
+      new Error("Output file already exists: /existing/file.png"),
+    );
+    vi.mocked(generateImage).mockResolvedValue(
+      createMockImageResult([{ base64: "YQ==", mediaType: "image/png" }]),
+    );
+
+    const cmd = imageNew();
+    await cmd.parseAsync(["node", "test", "-O", "/existing/file.png", "test"]);
+
+    expect(console.error).toHaveBeenCalledWith(
+      "Output file already exists: /existing/file.png",
+    );
+    expect(exit).toHaveBeenCalledWith(1);
   });
 });

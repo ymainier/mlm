@@ -4,7 +4,7 @@ import { generateText, type UserContent } from "ai";
 import { Command } from "commander";
 import { getPrompt } from "../utils/input";
 import { collect, parseProviderOptions } from "../utils/options";
-import { save } from "../utils/images";
+import { save, validateOutputPaths } from "../utils/images";
 
 const IMAGE_SYSTEM_PROMPT = `
 You are an AI model specialized in generating images based on textual descriptions.
@@ -18,14 +18,20 @@ export function image() {
     .option(
       "-m, --model <provider/model>",
       "image model to use",
-      "google/gemini-2.5-flash-image",
+      "google/gemini-2.5-flash-image"
     )
     .option("-i, --image <path>", "path to input image file")
     .option(
       "-o, --option <provider.key=value>",
       "provider option (repeatable)",
       collect,
-      [],
+      []
+    )
+    .option(
+      "-O, --output <path>",
+      "output file path (repeatable, extras saved to temp)",
+      collect,
+      []
     )
     .argument("<prompt>", "description of the image (use - for stdin)")
     .action(
@@ -35,10 +41,23 @@ export function image() {
           model,
           image,
           option,
-        }: { model: string; image?: string; option: string[] },
+          output,
+        }: {
+          model: string;
+          image?: string;
+          option: string[];
+          output: string[];
+        }
       ) => {
         const system = IMAGE_SYSTEM_PROMPT;
         const prompt = await getPrompt(input);
+
+        try {
+          await validateOutputPaths(output);
+        } catch (err) {
+          console.error((err as Error).message);
+          exit(1);
+        }
 
         const content: Exclude<UserContent, "string"> = [];
 
@@ -51,7 +70,7 @@ export function image() {
           content.push({ type: "image", mediaType, image: imageBuffer });
 
           console.log(
-            `Using input image: ${image}: ${mediaType} ${imageBuffer.length} bytes`,
+            `Using input image: ${image}: ${mediaType} ${imageBuffer.length} bytes`
           );
         }
 
@@ -66,7 +85,7 @@ export function image() {
         });
 
         const images = result.files.filter((f) =>
-          f.mediaType?.startsWith("image/"),
+          f.mediaType?.startsWith("image/")
         );
 
         if (images.length === 0) {
@@ -74,9 +93,9 @@ export function image() {
           exit(1);
         }
 
-        const paths = await save(images);
+        const paths = await save(images, output);
         paths.forEach((p) => console.log(p));
-      },
+      }
     );
 
   return cmd;
