@@ -11,10 +11,7 @@ vi.mock("node:os", () => ({
   tmpdir: vi.fn(() => "/tmp"),
 }));
 
-function createMockFile(
-  mediaType: string,
-  data: Uint8Array,
-): GeneratedFile {
+function createMockFile(mediaType: string, data: Uint8Array): GeneratedFile {
   return { mediaType, uint8Array: data } as GeneratedFile;
 }
 
