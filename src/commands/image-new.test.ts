@@ -2,19 +2,15 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { experimental_generateImage as generateImage } from "ai";
 import { imageNew } from "./image-new";
 import { getPrompt } from "../utils/input";
-import { writeFile } from "node:fs/promises";
+import { save } from "../utils/images";
 import { exit } from "node:process";
 
 vi.mock("../utils/input", () => ({ getPrompt: vi.fn() }));
 
 vi.mock("ai", () => ({ experimental_generateImage: vi.fn() }));
 
-vi.mock("node:fs/promises", () => ({
-  writeFile: vi.fn(),
-}));
-
-vi.mock("node:os", () => ({
-  tmpdir: vi.fn(() => "/tmp"),
+vi.mock("../utils/images", () => ({
+  save: vi.fn(),
 }));
 
 vi.mock("node:process", () => ({
@@ -33,7 +29,7 @@ describe("image-new command", () => {
     vi.spyOn(console, "log").mockImplementation(() => {});
     vi.spyOn(console, "error").mockImplementation(() => {});
     vi.mocked(getPrompt).mockImplementation(async (input) => input);
-    vi.mocked(writeFile).mockResolvedValue(undefined);
+    vi.mocked(save).mockResolvedValue(["/tmp/image-123-0.png"]);
   });
 
   it("should create a command named 'image-new'", () => {
@@ -77,7 +73,7 @@ describe("image-new command", () => {
     });
   });
 
-  it("should write generated images to temp directory", async () => {
+  it("should call save with generated images", async () => {
     const base64Data = Buffer.from("fake image data").toString("base64");
     vi.mocked(generateImage).mockResolvedValue(
       createMockImageResult([{ base64: base64Data, mediaType: "image/png" }]),
@@ -86,13 +82,16 @@ describe("image-new command", () => {
     const cmd = imageNew();
     await cmd.parseAsync(["node", "test", "a cat"]);
 
-    expect(writeFile).toHaveBeenCalledWith(
-      expect.stringMatching(/^\/tmp\/image-\d+-0\.png$/),
-      expect.any(Buffer),
-    );
+    expect(save).toHaveBeenCalledWith([
+      expect.objectContaining({ mediaType: "image/png" }),
+    ]);
   });
 
-  it("should handle multiple generated images", async () => {
+  it("should call save with multiple generated images", async () => {
+    vi.mocked(save).mockResolvedValue([
+      "/tmp/image-123-0.png",
+      "/tmp/image-123-1.jpeg",
+    ]);
     vi.mocked(generateImage).mockResolvedValue(
       createMockImageResult([
         { base64: "YQ==", mediaType: "image/png" },
@@ -103,8 +102,10 @@ describe("image-new command", () => {
     const cmd = imageNew();
     await cmd.parseAsync(["node", "test", "two images"]);
 
-    expect(writeFile).toHaveBeenCalledTimes(2);
-    expect(console.log).toHaveBeenCalledWith("Generated 2 image(s).");
+    expect(save).toHaveBeenCalledWith([
+      expect.objectContaining({ mediaType: "image/png" }),
+      expect.objectContaining({ mediaType: "image/jpeg" }),
+    ]);
   });
 
   it("should exit with code 1 when generateImage throws an error", async () => {
@@ -129,21 +130,6 @@ describe("image-new command", () => {
 
     expect(console.error).toHaveBeenCalledWith("No images were generated.");
     expect(exit).toHaveBeenCalledWith(1);
-  });
-
-  it("should log the count of generated images", async () => {
-    vi.mocked(generateImage).mockResolvedValue(
-      createMockImageResult([
-        { base64: "YQ==", mediaType: "image/png" },
-        { base64: "Yg==", mediaType: "image/png" },
-        { base64: "Yw==", mediaType: "image/png" },
-      ]),
-    );
-
-    const cmd = imageNew();
-    await cmd.parseAsync(["node", "test", "three images"]);
-
-    expect(console.log).toHaveBeenCalledWith("Generated 3 image(s).");
   });
 
   it("should parse single -o option into providerOptions", async () => {

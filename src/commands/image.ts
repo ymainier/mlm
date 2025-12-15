@@ -1,11 +1,10 @@
-import { writeFile, readFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path from "node:path";
+import { readFile } from "node:fs/promises";
 import { exit } from "node:process";
 import { generateText, type UserContent } from "ai";
 import { Command } from "commander";
 import { getPrompt } from "../utils/input";
 import { collect, parseProviderOptions } from "../utils/options";
+import { save } from "../utils/images";
 
 const IMAGE_SYSTEM_PROMPT = `
 You are an AI model specialized in generating images based on textual descriptions.
@@ -66,29 +65,17 @@ export function image() {
           providerOptions,
         });
 
-        // Save generated images to local filesystem
-        const imageFiles = result.files.filter((f) =>
+        const images = result.files.filter((f) =>
           f.mediaType?.startsWith("image/"),
         );
 
-        if (imageFiles.length > 0) {
-          // Create output directory if it doesn't exist
-          const outputDir = tmpdir();
-
-          const timestamp = Date.now();
-
-          for (const [index, file] of imageFiles.entries()) {
-            const extension = file.mediaType?.split("/")[1] || "png";
-            const filename = `image-${timestamp}-${index}.${extension}`;
-            const filepath = path.join(outputDir, filename);
-
-            await writeFile(filepath, file.uint8Array);
-            console.log(filepath);
-          }
-        } else {
-          console.log("No images were generated.");
+        if (images.length === 0) {
+          console.error("No images were generated.");
           exit(1);
         }
+
+        const paths = await save(images);
+        paths.forEach((p) => console.log(p));
       },
     );
 

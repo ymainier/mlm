@@ -2,20 +2,20 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { generateText } from "ai";
 import { image } from "./image";
 import { getPrompt } from "../utils/input";
-import { writeFile, readFile } from "node:fs/promises";
+import { save } from "../utils/images";
+import { readFile } from "node:fs/promises";
 import { exit } from "node:process";
 
 vi.mock("../utils/input", () => ({ getPrompt: vi.fn() }));
 
 vi.mock("ai", () => ({ generateText: vi.fn() }));
 
-vi.mock("node:fs/promises", () => ({
-  writeFile: vi.fn(),
-  readFile: vi.fn(),
+vi.mock("../utils/images", () => ({
+  save: vi.fn(),
 }));
 
-vi.mock("node:os", () => ({
-  tmpdir: vi.fn(() => "/tmp"),
+vi.mock("node:fs/promises", () => ({
+  readFile: vi.fn(),
 }));
 
 vi.mock("node:process", () => ({
@@ -32,8 +32,9 @@ describe("image command", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
     vi.mocked(getPrompt).mockImplementation(async (input) => input);
-    vi.mocked(writeFile).mockResolvedValue(undefined);
+    vi.mocked(save).mockResolvedValue(["/tmp/image-123-0.png"]);
   });
 
   it("should create a command named 'image'", () => {
@@ -160,7 +161,7 @@ describe("image command", () => {
     );
   });
 
-  it("should write generated images to temp directory", async () => {
+  it("should call save with generated images", async () => {
     const mockUint8Array = new Uint8Array([1, 2, 3, 4]);
     vi.mocked(generateText).mockResolvedValue(
       createMockTextResult([
@@ -171,10 +172,12 @@ describe("image command", () => {
     const cmd = image();
     await cmd.parseAsync(["node", "test", "a sunset"]);
 
-    expect(writeFile).toHaveBeenCalledWith(
-      expect.stringMatching(/^\/tmp\/image-\d+-0\.png$/),
-      mockUint8Array,
-    );
+    expect(save).toHaveBeenCalledWith([
+      expect.objectContaining({
+        mediaType: "image/png",
+        uint8Array: mockUint8Array,
+      }),
+    ]);
   });
 
   it("should exit with code 1 when no images are generated", async () => {
@@ -183,11 +186,11 @@ describe("image command", () => {
     const cmd = image();
     await cmd.parseAsync(["node", "test", "something"]);
 
-    expect(console.log).toHaveBeenCalledWith("No images were generated.");
+    expect(console.error).toHaveBeenCalledWith("No images were generated.");
     expect(exit).toHaveBeenCalledWith(1);
   });
 
-  it("should handle multiple generated images", async () => {
+  it("should call save with multiple generated images", async () => {
     vi.mocked(generateText).mockResolvedValue(
       createMockTextResult([
         { mediaType: "image/png", uint8Array: new Uint8Array([1]) },
@@ -198,15 +201,10 @@ describe("image command", () => {
     const cmd = image();
     await cmd.parseAsync(["node", "test", "two images"]);
 
-    expect(writeFile).toHaveBeenCalledTimes(2);
-    expect(writeFile).toHaveBeenCalledWith(
-      expect.stringMatching(/\.png$/),
-      expect.any(Uint8Array),
-    );
-    expect(writeFile).toHaveBeenCalledWith(
-      expect.stringMatching(/\.jpeg$/),
-      expect.any(Uint8Array),
-    );
+    expect(save).toHaveBeenCalledWith([
+      expect.objectContaining({ mediaType: "image/png" }),
+      expect.objectContaining({ mediaType: "image/jpeg" }),
+    ]);
   });
 
   it("should pass empty providerOptions by default", async () => {
