@@ -18,6 +18,12 @@ export function prompt() {
       collect,
       [],
     )
+    .option(
+      "-a, --attachment <path>",
+      "file attachment (repeatable)",
+      collect,
+      [],
+    )
     .argument("<prompt>", "prompt text (use - for stdin)")
     .action(
       async (
@@ -26,12 +32,25 @@ export function prompt() {
           system,
           model,
           option,
-        }: { system?: string; model: string; option: string[] },
+          attachment,
+        }: {
+          system?: string;
+          model: string;
+          option: string[];
+          attachment: string[];
+        },
       ) => {
         const prompt = await getPrompt(input);
         const providerOptions = parseProviderOptions(option);
         const onTextPart = process.stdout.write.bind(process.stdout);
-        streamText({ system, model, prompt, providerOptions, onTextPart });
+        streamText({
+          system,
+          model,
+          prompt,
+          attachments: attachment,
+          providerOptions,
+          onTextPart,
+        });
       },
     );
 

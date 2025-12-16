@@ -162,4 +162,47 @@ describe("prompt command", () => {
       }),
     );
   });
+
+  it("should pass empty attachments by default", async () => {
+    const cmd = prompt();
+    await cmd.parseAsync(["node", "test", "test"]);
+
+    expect(streamText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        attachments: [],
+      }),
+    );
+  });
+
+  it("should pass single attachment via -a option", async () => {
+    const cmd = prompt();
+    await cmd.parseAsync(["node", "test", "-a", "image.png", "describe this"]);
+
+    expect(streamText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        attachments: ["image.png"],
+      }),
+    );
+  });
+
+  it("should pass multiple attachments via repeated -a options", async () => {
+    const cmd = prompt();
+    await cmd.parseAsync([
+      "node",
+      "test",
+      "-a",
+      "image.png",
+      "-a",
+      "document.pdf",
+      "--attachment",
+      "data.csv",
+      "summarize these",
+    ]);
+
+    expect(streamText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        attachments: ["image.png", "document.pdf", "data.csv"],
+      }),
+    );
+  });
 });
