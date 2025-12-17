@@ -1,7 +1,7 @@
-import { readFile } from "node:fs/promises";
 import { exit } from "node:process";
 import { generateText, type UserContent } from "ai";
 import { Command } from "commander";
+import { getAttachmentContent } from "../utils/attachments";
 import { getPrompt } from "../utils/input";
 import { collect, parseProviderOptions } from "../utils/options";
 import { save, validateOutputPaths } from "../utils/images";
@@ -20,7 +20,12 @@ export function image() {
       "image model to use",
       "google/gemini-2.5-flash-image"
     )
-    .option("-i, --image <path>", "path to input image file")
+    .option(
+      "-a, --attachment <path>",
+      "path to input file (repeatable)",
+      collect,
+      []
+    )
     .option(
       "-o, --option <provider.key=value>",
       "provider option (repeatable)",
@@ -39,12 +44,12 @@ export function image() {
         input: string,
         {
           model,
-          image,
+          attachment,
           option,
           output,
         }: {
           model: string;
-          image?: string;
+          attachment: string[];
           option: string[];
           output: string[];
         }
@@ -61,17 +66,8 @@ export function image() {
 
         const content: Exclude<UserContent, "string"> = [];
 
-        if (image) {
-          const imageBuffer = await readFile(image);
-          const mediaType = image.toLowerCase().endsWith(".png")
-            ? "image/png"
-            : "image/jpeg";
-
-          content.push({ type: "image", mediaType, image: imageBuffer });
-
-          console.log(
-            `Using input image: ${image}: ${mediaType} ${imageBuffer.length} bytes`
-          );
+        for (const path of attachment) {
+          content.push(await getAttachmentContent(path));
         }
 
         content.push({ type: "text", text: prompt });

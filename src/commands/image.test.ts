@@ -3,7 +3,7 @@ import { generateText } from "ai";
 import { image } from "./image";
 import { getPrompt } from "../utils/input";
 import { save, validateOutputPaths } from "../utils/images";
-import { readFile } from "node:fs/promises";
+import { getAttachmentContent } from "../utils/attachments";
 import { exit } from "node:process";
 
 vi.mock("../utils/input", () => ({ getPrompt: vi.fn() }));
@@ -15,8 +15,8 @@ vi.mock("../utils/images", () => ({
   validateOutputPaths: vi.fn(),
 }));
 
-vi.mock("node:fs/promises", () => ({
-  readFile: vi.fn(),
+vi.mock("../utils/attachments", () => ({
+  getAttachmentContent: vi.fn(),
 }));
 
 vi.mock("node:process", () => ({
@@ -94,7 +94,11 @@ describe("image command", () => {
 
   it("should read and include input image when provided", async () => {
     const mockImageBuffer = Buffer.from("fake image data");
-    vi.mocked(readFile).mockResolvedValue(mockImageBuffer);
+    vi.mocked(getAttachmentContent).mockResolvedValue({
+      type: "image",
+      mediaType: "image/png",
+      image: mockImageBuffer,
+    });
     vi.mocked(generateText).mockResolvedValue(
       createMockTextResult([
         { mediaType: "image/png", uint8Array: new Uint8Array([1]) },
@@ -105,12 +109,12 @@ describe("image command", () => {
     await cmd.parseAsync([
       "node",
       "test",
-      "-i",
+      "-a",
       "/path/to/image.png",
       "edit this",
     ]);
 
-    expect(readFile).toHaveBeenCalledWith("/path/to/image.png");
+    expect(getAttachmentContent).toHaveBeenCalledWith("/path/to/image.png");
     expect(generateText).toHaveBeenCalledWith(
       expect.objectContaining({
         prompt: expect.arrayContaining([
@@ -130,7 +134,11 @@ describe("image command", () => {
 
   it("should detect jpeg media type for jpg images", async () => {
     const mockImageBuffer = Buffer.from("fake jpeg data");
-    vi.mocked(readFile).mockResolvedValue(mockImageBuffer);
+    vi.mocked(getAttachmentContent).mockResolvedValue({
+      type: "image",
+      mediaType: "image/jpeg",
+      image: mockImageBuffer,
+    });
     vi.mocked(generateText).mockResolvedValue(
       createMockTextResult([
         { mediaType: "image/png", uint8Array: new Uint8Array([1]) },
@@ -141,7 +149,7 @@ describe("image command", () => {
     await cmd.parseAsync([
       "node",
       "test",
-      "-i",
+      "-a",
       "/path/to/photo.jpg",
       "describe",
     ]);

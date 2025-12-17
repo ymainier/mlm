@@ -1,6 +1,5 @@
-import { readFile } from "node:fs/promises";
 import { streamText as _streamText, type UserContent } from "ai";
-import { fileTypeFromBuffer } from "file-type";
+import { getAttachmentContent } from "./attachments";
 import type { ProviderOptions } from "./options";
 
 type StreamTextOptions = {
@@ -23,15 +22,7 @@ export async function streamText({
   const content: Exclude<UserContent, string> = [];
 
   for (const path of attachments) {
-    const data = await readFile(path);
-    const fileType = await fileTypeFromBuffer(data);
-    const mediaType = fileType?.mime ?? "application/octet-stream";
-
-    if (mediaType.startsWith("image/")) {
-      content.push({ type: "image", mediaType, image: data });
-    } else {
-      content.push({ type: "file", mediaType, data });
-    }
+    content.push(await getAttachmentContent(path));
   }
 
   content.push({ type: "text", text: prompt });
