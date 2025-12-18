@@ -7,6 +7,7 @@ export function prompt() {
   const cmd = new Command("prompt");
 
   cmd
+    .description("Send a text prompt to an LLM")
     .option(
       "-s, --system <system>",
       "system prompt to guide the model behavior",

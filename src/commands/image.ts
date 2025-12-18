@@ -15,6 +15,7 @@ export function image() {
   const cmd = new Command("image");
 
   cmd
+    .description("Generate images using multimodal models")
     .option(
       "-m, --model <provider/model>",
       "image model to use",

@@ -9,6 +9,7 @@ export function imageNew() {
   const cmd = new Command("image-new");
 
   cmd
+    .description("Generate images using dedicated image generation models")
     .option(
       "-m, --model <provider/model>",
       "image model to use",

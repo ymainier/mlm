@@ -18,6 +18,7 @@ export function models() {
   const cmd = new Command("models");
 
   cmd
+    .description("List available models with pricing information")
     .option(
       "-t, --type [modelType]",
       "filter by model type (all, language, embedding or image)",

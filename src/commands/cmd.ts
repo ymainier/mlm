@@ -15,6 +15,7 @@ export function cmd() {
   const cmd = new Command("cmd");
 
   cmd
+    .description("Generate shell commands from natural language descriptions")
     .option("-m, --model <provider/model>", "model to use", "openai/gpt-5-mini")
     .option(
       "-o, --option <provider.key=value>",
