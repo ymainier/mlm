@@ -1,16 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { prompt } from "./prompt";
 import { getPrompt } from "../utils/input";
-import { streamText } from "../utils/text";
+import { getMessages } from "../utils/get-messages";
+import { printTextStream } from "../utils/print-text-stream";
+import { streamText, type ModelMessage } from "ai";
 
 vi.mock("../utils/input", () => ({ getPrompt: vi.fn() }));
-
-vi.mock("../utils/text", () => ({ streamText: vi.fn() }));
+vi.mock("../utils/get-messages", () => ({ getMessages: vi.fn() }));
+vi.mock("../utils/print-text-stream", () => ({ printTextStream: vi.fn() }));
+vi.mock("ai", () => ({ streamText: vi.fn() }));
 
 describe("prompt command", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     vi.mocked(getPrompt).mockImplementation(async (input) => input);
-    vi.mocked(streamText).mockResolvedValue(undefined);
+    vi.mocked(getMessages).mockResolvedValue([
+      { role: "user", content: [{ type: "text", text: "test" }] },
+    ]);
+    vi.mocked(streamText).mockReturnValue({
+      textStream: (async function* () {})(),
+    } as unknown as ReturnType<typeof streamText>);
+    vi.mocked(printTextStream).mockResolvedValue(undefined);
   });
 
   it("should create a command named 'prompt'", () => {
@@ -25,15 +35,27 @@ describe("prompt command", () => {
     expect(getPrompt).toHaveBeenCalledWith("test prompt");
   });
 
-  it("should call streamText with the resolved prompt", async () => {
+  it("should call getMessages with the resolved prompt", async () => {
     vi.mocked(getPrompt).mockResolvedValue("resolved prompt");
 
     const cmd = prompt();
     await cmd.parseAsync(["node", "test", "input"]);
 
+    expect(getMessages).toHaveBeenCalledWith(undefined, "resolved prompt", []);
+  });
+
+  it("should call streamText with messages from getMessages", async () => {
+    const mockMessages: ModelMessage[] = [
+      { role: "user", content: [{ type: "text", text: "hello" }] },
+    ];
+    vi.mocked(getMessages).mockResolvedValue(mockMessages);
+
+    const cmd = prompt();
+    await cmd.parseAsync(["node", "test", "hello"]);
+
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
-        prompt: "resolved prompt",
+        messages: mockMessages,
       }),
     );
   });
@@ -66,7 +88,7 @@ describe("prompt command", () => {
     );
   });
 
-  it("should accept a system prompt option", async () => {
+  it("should pass system prompt to getMessages", async () => {
     const cmd = prompt();
     await cmd.parseAsync([
       "node",
@@ -76,23 +98,25 @@ describe("prompt command", () => {
       "test prompt",
     ]);
 
-    expect(streamText).toHaveBeenCalledWith(
-      expect.objectContaining({
-        system: "You are a helpful assistant.",
-        prompt: "test prompt",
-      }),
+    expect(getMessages).toHaveBeenCalledWith(
+      "You are a helpful assistant.",
+      "test prompt",
+      [],
     );
   });
 
-  it("should pass onTextPart callback bound to stdout.write", async () => {
+  it("should call printTextStream with the textStream", async () => {
+    const mockTextStream = (async function* () {
+      yield "hello";
+    })();
+    vi.mocked(streamText).mockReturnValue({
+      textStream: mockTextStream,
+    } as unknown as ReturnType<typeof streamText>);
+
     const cmd = prompt();
     await cmd.parseAsync(["node", "test", "test"]);
 
-    expect(streamText).toHaveBeenCalledWith(
-      expect.objectContaining({
-        onTextPart: expect.any(Function),
-      }),
-    );
+    expect(printTextStream).toHaveBeenCalledWith(mockTextStream);
   });
 
   it("should pass empty providerOptions by default", async () => {
@@ -167,22 +191,16 @@ describe("prompt command", () => {
     const cmd = prompt();
     await cmd.parseAsync(["node", "test", "test"]);
 
-    expect(streamText).toHaveBeenCalledWith(
-      expect.objectContaining({
-        attachments: [],
-      }),
-    );
+    expect(getMessages).toHaveBeenCalledWith(undefined, "test", []);
   });
 
   it("should pass single attachment via -a option", async () => {
     const cmd = prompt();
     await cmd.parseAsync(["node", "test", "-a", "image.png", "describe this"]);
 
-    expect(streamText).toHaveBeenCalledWith(
-      expect.objectContaining({
-        attachments: ["image.png"],
-      }),
-    );
+    expect(getMessages).toHaveBeenCalledWith(undefined, "describe this", [
+      "image.png",
+    ]);
   });
 
   it("should pass multiple attachments via repeated -a options", async () => {
@@ -199,10 +217,10 @@ describe("prompt command", () => {
       "summarize these",
     ]);
 
-    expect(streamText).toHaveBeenCalledWith(
-      expect.objectContaining({
-        attachments: ["image.png", "document.pdf", "data.csv"],
-      }),
-    );
+    expect(getMessages).toHaveBeenCalledWith(undefined, "summarize these", [
+      "image.png",
+      "document.pdf",
+      "data.csv",
+    ]);
   });
 });

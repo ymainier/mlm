@@ -1,16 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { cmd } from "./cmd";
 import { getPrompt } from "../utils/input";
-import { streamText } from "../utils/text";
+import { getMessages } from "../utils/get-messages";
+import { printTextStream } from "../utils/print-text-stream";
+import { streamText, type ModelMessage } from "ai";
 
 vi.mock("../utils/input", () => ({ getPrompt: vi.fn() }));
-
-vi.mock("../utils/text", () => ({ streamText: vi.fn() }));
+vi.mock("../utils/get-messages", () => ({ getMessages: vi.fn() }));
+vi.mock("../utils/print-text-stream", () => ({ printTextStream: vi.fn() }));
+vi.mock("ai", () => ({ streamText: vi.fn() }));
 
 describe("cmd command", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     vi.mocked(getPrompt).mockImplementation(async (input) => input);
-    vi.mocked(streamText).mockResolvedValue(undefined);
+    vi.mocked(getMessages).mockResolvedValue([
+      { role: "user", content: [{ type: "text", text: "test" }] },
+    ]);
+    vi.mocked(streamText).mockReturnValue({
+      textStream: (async function* () {})(),
+    } as unknown as ReturnType<typeof streamText>);
+    vi.mocked(printTextStream).mockResolvedValue(undefined);
   });
 
   it("should create a command named 'cmd'", () => {
@@ -25,28 +35,33 @@ describe("cmd command", () => {
     expect(getPrompt).toHaveBeenCalledWith("undo last git commit");
   });
 
-  it("should call streamText with the resolved prompt", async () => {
+  it("should call getMessages with the command-specific system prompt", async () => {
     vi.mocked(getPrompt).mockResolvedValue("resolved prompt");
 
     const command = cmd();
     await command.parseAsync(["node", "test", "input"]);
 
-    expect(streamText).toHaveBeenCalledWith(
-      expect.objectContaining({
-        prompt: "resolved prompt",
-      }),
+    expect(getMessages).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "Return only the command to be executed as a raw string",
+      ),
+      "resolved prompt",
     );
   });
 
-  it("should include the command-specific system prompt", async () => {
+  it("should call streamText with messages from getMessages", async () => {
+    const mockMessages: ModelMessage[] = [
+      { role: "system", content: "system prompt" },
+      { role: "user", content: [{ type: "text", text: "hello" }] },
+    ];
+    vi.mocked(getMessages).mockResolvedValue(mockMessages);
+
     const command = cmd();
     await command.parseAsync(["node", "test", "hello world"]);
 
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
-        system: expect.stringContaining(
-          "Return only the command to be executed as a raw string",
-        ),
+        messages: mockMessages,
       }),
     );
   });
@@ -96,15 +111,18 @@ describe("cmd command", () => {
     );
   });
 
-  it("should pass onTextPart callback bound to stdout.write", async () => {
+  it("should call printTextStream with the textStream", async () => {
+    const mockTextStream = (async function* () {
+      yield "hello";
+    })();
+    vi.mocked(streamText).mockReturnValue({
+      textStream: mockTextStream,
+    } as unknown as ReturnType<typeof streamText>);
+
     const command = cmd();
     await command.parseAsync(["node", "test", "test"]);
 
-    expect(streamText).toHaveBeenCalledWith(
-      expect.objectContaining({
-        onTextPart: expect.any(Function),
-      }),
-    );
+    expect(printTextStream).toHaveBeenCalledWith(mockTextStream);
   });
 
   it("should pass empty providerOptions by default", async () => {

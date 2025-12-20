@@ -1,7 +1,9 @@
 import { Command } from "commander";
 import { getPrompt } from "../utils/input";
 import { collect, parseProviderOptions } from "../utils/options";
-import { streamText } from "../utils/text";
+import { getMessages } from "../utils/get-messages";
+import { streamText } from "ai";
+import { printTextStream } from "../utils/print-text-stream";
 
 const COMMAND_SYSTEM_PROMPT = `
 Return only the command to be executed as a raw string, no string delimiters
@@ -32,8 +34,11 @@ export function cmd() {
         const system = COMMAND_SYSTEM_PROMPT;
         const prompt = await getPrompt(input);
         const providerOptions = parseProviderOptions(option);
-        const onTextPart = process.stdout.write.bind(process.stdout);
-        streamText({ system, model, prompt, providerOptions, onTextPart });
+        const messages = await getMessages(system, prompt);
+
+        const { textStream } = streamText({ model, providerOptions, messages });
+
+        await printTextStream(textStream);
       },
     );
 

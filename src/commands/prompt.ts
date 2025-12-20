@@ -1,7 +1,9 @@
 import { Command } from "commander";
 import { getPrompt } from "../utils/input";
 import { collect, parseProviderOptions } from "../utils/options";
-import { streamText } from "../utils/text";
+import { getMessages } from "../utils/get-messages";
+import { streamText } from "ai";
+import { printTextStream } from "../utils/print-text-stream";
 
 export function prompt() {
   const cmd = new Command("prompt");
@@ -43,15 +45,11 @@ export function prompt() {
       ) => {
         const prompt = await getPrompt(input);
         const providerOptions = parseProviderOptions(option);
-        const onTextPart = process.stdout.write.bind(process.stdout);
-        streamText({
-          system,
-          model,
-          prompt,
-          attachments: attachment,
-          providerOptions,
-          onTextPart,
-        });
+        const messages = await getMessages(system, prompt, attachment);
+
+        const { textStream } = streamText({ model, providerOptions, messages });
+
+        await printTextStream(textStream);
       },
     );
 
