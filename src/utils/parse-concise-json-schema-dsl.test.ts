@@ -111,7 +111,9 @@ describe("parseConciseJsonSchemaDsl", () => {
     });
 
     it("should handle description with leading/trailing whitespace", () => {
-      const result = parseConciseJsonSchemaDsl("name str:   spaced description   ");
+      const result = parseConciseJsonSchemaDsl(
+        "name str:   spaced description   ",
+      );
       expect(result?.properties.name?.description).toBe("spaced description");
     });
 
@@ -123,7 +125,9 @@ describe("parseConciseJsonSchemaDsl", () => {
 
   describe("comma-separated fields", () => {
     it("should parse multiple fields separated by commas", () => {
-      const result = parseConciseJsonSchemaDsl("name str, age int, active bool");
+      const result = parseConciseJsonSchemaDsl(
+        "name str, age int, active bool",
+      );
       expect(result).toEqual({
         type: "object",
         properties: {
