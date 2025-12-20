@@ -1,5 +1,5 @@
 import { exit } from "node:process";
-import { generateText, type UserContent } from "ai";
+import { generateText, type ModelMessage, type UserContent } from "ai";
 import { Command } from "commander";
 import { getAttachmentContent } from "../utils/attachments";
 import { getPrompt } from "../utils/input";
@@ -19,25 +19,25 @@ export function image() {
     .option(
       "-m, --model <provider/model>",
       "image model to use",
-      "google/gemini-2.5-flash-image"
+      "google/gemini-2.5-flash-image",
     )
     .option(
       "-a, --attachment <path>",
       "path to input file (repeatable)",
       collect,
-      []
+      [],
     )
     .option(
       "-o, --option <provider.key=value>",
       "provider option (repeatable)",
       collect,
-      []
+      [],
     )
     .option(
       "-O, --output <path>",
       "output file path (repeatable, extras saved to temp)",
       collect,
-      []
+      [],
     )
     .argument("<prompt>", "description of the image (use - for stdin)")
     .action(
@@ -53,11 +53,8 @@ export function image() {
           attachment: string[];
           option: string[];
           output: string[];
-        }
+        },
       ) => {
-        const system = IMAGE_SYSTEM_PROMPT;
-        const prompt = await getPrompt(input);
-
         try {
           await validateOutputPaths(output);
         } catch (err) {
@@ -65,24 +62,21 @@ export function image() {
           exit(1);
         }
 
+        const messages: Array<ModelMessage> = [
+          { role: "system", content: IMAGE_SYSTEM_PROMPT },
+        ];
         const content: Exclude<UserContent, "string"> = [];
-
         for (const path of attachment) {
           content.push(await getAttachmentContent(path));
         }
-
-        content.push({ type: "text", text: prompt });
+        content.push({ type: "text", text: await getPrompt(input) });
+        messages.push({ role: "user", content });
 
         const providerOptions = parseProviderOptions(option);
-        const result = await generateText({
-          system,
-          model,
-          prompt: [{ role: "user", content }],
-          providerOptions,
-        });
+        const result = await generateText({ model, messages, providerOptions });
 
         const images = result.files.filter((f) =>
-          f.mediaType?.startsWith("image/")
+          f.mediaType?.startsWith("image/"),
         );
 
         if (images.length === 0) {
@@ -92,7 +86,7 @@ export function image() {
 
         const paths = await save(images, output);
         paths.forEach((p) => console.log(p));
-      }
+      },
     );
 
   return cmd;

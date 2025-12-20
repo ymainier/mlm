@@ -1,4 +1,8 @@
-import { streamText as _streamText, type UserContent } from "ai";
+import {
+  streamText as _streamText,
+  type ModelMessage,
+  type UserContent,
+} from "ai";
 import { getAttachmentContent } from "./attachments";
 import type { ProviderOptions } from "./options";
 
@@ -9,6 +13,7 @@ type StreamTextOptions = {
   attachments?: string[];
   providerOptions?: ProviderOptions;
   onTextPart: (textPart: string) => void;
+  conversationId?: string;
 };
 
 export async function streamText({
@@ -19,19 +24,23 @@ export async function streamText({
   providerOptions = {},
   onTextPart,
 }: StreamTextOptions) {
-  const content: Exclude<UserContent, string> = [];
+  const messages: Array<ModelMessage> = [];
 
+  if (system) {
+    messages.push({ role: "system", content: system });
+  }
+
+  const content: Exclude<UserContent, string> = [];
   for (const path of attachments) {
     content.push(await getAttachmentContent(path));
   }
-
   content.push({ type: "text", text: prompt });
+  messages.push({ role: "user", content });
 
   const { textStream } = _streamText({
-    system,
     model,
     providerOptions,
-    prompt: [{ role: "user", content }],
+    messages,
   });
 
   for await (const textPart of textStream) {

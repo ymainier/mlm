@@ -13,19 +13,19 @@ export function imageNew() {
     .option(
       "-m, --model <provider/model>",
       "image model to use",
-      "google/imagen-4.0-fast-generate-001"
+      "google/imagen-4.0-fast-generate-001",
     )
     .option(
       "-o, --option <provider.key=value>",
       "provider option (repeatable)",
       collect,
-      []
+      [],
     )
     .option(
       "-O, --output <path>",
       "output file path (repeatable, extras saved to temp)",
       collect,
-      []
+      [],
     )
     .argument("<prompt>", "description of the image (use - for stdin)")
     .action(
@@ -35,7 +35,7 @@ export function imageNew() {
           model,
           option,
           output,
-        }: { model: string; option: string[]; output: string[] }
+        }: { model: string; option: string[]; output: string[] },
       ) => {
         const prompt = await getPrompt(input);
 
@@ -62,7 +62,7 @@ export function imageNew() {
 
         const paths = await save(result.images, output);
         paths.forEach((p) => console.log(p));
-      }
+      },
     );
 
   return cmd;
