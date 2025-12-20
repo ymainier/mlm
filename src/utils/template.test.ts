@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { stringify as stringifyYaml } from "yaml";
 
 const { mockReadFile } = vi.hoisted(() => ({
   mockReadFile: vi.fn(),
@@ -31,12 +32,12 @@ describe("loadTemplate", () => {
       attachments: ["file.txt"],
       schema: "name str",
     };
-    mockReadFile.mockResolvedValue(JSON.stringify(template));
+    mockReadFile.mockResolvedValue(stringifyYaml(template));
 
     const result = await loadTemplate("my-template");
 
     expect(mockReadFile).toHaveBeenCalledWith(
-      join(homedir(), ".mlm", "templates", "my-template.json"),
+      join(homedir(), ".mlm", "templates", "my-template.yaml"),
       "utf-8",
     );
     expect(result).toEqual(template);
@@ -44,7 +45,7 @@ describe("loadTemplate", () => {
 
   it("should handle template with only some fields", async () => {
     const template = { system: "Be brief" };
-    mockReadFile.mockResolvedValue(JSON.stringify(template));
+    mockReadFile.mockResolvedValue(stringifyYaml(template));
 
     const result = await loadTemplate("partial");
 
@@ -52,11 +53,11 @@ describe("loadTemplate", () => {
   });
 
   it("should handle empty template", async () => {
-    mockReadFile.mockResolvedValue("{}");
+    mockReadFile.mockResolvedValue("");
 
     const result = await loadTemplate("empty");
 
-    expect(result).toEqual({});
+    expect(result).toBeNull();
   });
 
   it("should throw TemplateNotFoundError when template not found", async () => {
@@ -69,16 +70,16 @@ describe("loadTemplate", () => {
     );
     await expect(loadTemplate("missing")).rejects.toMatchObject({
       templateName: "missing",
-      templatePath: join(homedir(), ".mlm", "templates", "missing.json"),
+      templatePath: join(homedir(), ".mlm", "templates", "missing.yaml"),
     });
   });
 
-  it("should throw TemplateParseError for invalid JSON", async () => {
-    mockReadFile.mockResolvedValue("{ invalid json }");
+  it("should throw TemplateParseError for invalid YAML", async () => {
+    mockReadFile.mockResolvedValue("invalid: yaml: content:");
 
-    await expect(loadTemplate("bad-json")).rejects.toThrow(TemplateParseError);
-    await expect(loadTemplate("bad-json")).rejects.toMatchObject({
-      templateName: "bad-json",
+    await expect(loadTemplate("bad-yaml")).rejects.toThrow(TemplateParseError);
+    await expect(loadTemplate("bad-yaml")).rejects.toMatchObject({
+      templateName: "bad-yaml",
     });
   });
 
@@ -95,6 +96,6 @@ describe("loadTemplate", () => {
 describe("getTemplatePath", () => {
   it("should return correct path for template name", () => {
     const path = getTemplatePath("my-template");
-    expect(path).toBe(join(homedir(), ".mlm", "templates", "my-template.json"));
+    expect(path).toBe(join(homedir(), ".mlm", "templates", "my-template.yaml"));
   });
 });

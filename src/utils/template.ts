@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { parse as parseYaml, YAMLParseError } from "yaml";
 
 export interface Template {
   system?: string;
@@ -23,13 +24,13 @@ export class TemplateNotFoundError extends Error {
 
 export class TemplateParseError extends Error {
   constructor(public readonly templateName: string) {
-    super(`Invalid JSON in template: ${templateName}`);
+    super(`Invalid YAML in template: ${templateName}`);
     this.name = "TemplateParseError";
   }
 }
 
 export function getTemplatePath(name: string): string {
-  return join(homedir(), ".mlm", "templates", `${name}.json`);
+  return join(homedir(), ".mlm", "templates", `${name}.yaml`);
 }
 
 export async function loadTemplate(name: string): Promise<Template> {
@@ -37,12 +38,12 @@ export async function loadTemplate(name: string): Promise<Template> {
 
   try {
     const content = await readFile(path, "utf-8");
-    return JSON.parse(content) as Template;
+    return parseYaml(content) as Template;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       throw new TemplateNotFoundError(name, path);
     }
-    if (error instanceof SyntaxError) {
+    if (error instanceof YAMLParseError) {
       throw new TemplateParseError(name);
     }
     throw error;
