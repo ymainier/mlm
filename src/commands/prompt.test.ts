@@ -3,12 +3,20 @@ import { prompt } from "./prompt";
 import { getPrompt } from "../utils/input";
 import { getMessages } from "../utils/get-messages";
 import { printTextStream } from "../utils/print-text-stream";
-import { streamText, type ModelMessage } from "ai";
+import { streamText, generateObject, type ModelMessage } from "ai";
+import { parseConciseJsonSchemaDsl } from "../utils/parse-concise-json-schema-dsl";
 
 vi.mock("../utils/input", () => ({ getPrompt: vi.fn() }));
 vi.mock("../utils/get-messages", () => ({ getMessages: vi.fn() }));
 vi.mock("../utils/print-text-stream", () => ({ printTextStream: vi.fn() }));
-vi.mock("ai", () => ({ streamText: vi.fn() }));
+vi.mock("ai", () => ({
+  streamText: vi.fn(),
+  generateObject: vi.fn(),
+  jsonSchema: vi.fn((schema) => schema),
+}));
+vi.mock("../utils/parse-concise-json-schema-dsl", () => ({
+  parseConciseJsonSchemaDsl: vi.fn(),
+}));
 
 describe("prompt command", () => {
   beforeEach(() => {
@@ -21,6 +29,10 @@ describe("prompt command", () => {
       textStream: (async function* () {})(),
     } as unknown as ReturnType<typeof streamText>);
     vi.mocked(printTextStream).mockResolvedValue(undefined);
+    vi.mocked(parseConciseJsonSchemaDsl).mockReturnValue(undefined);
+    vi.mocked(generateObject).mockResolvedValue({
+      object: { result: "test" },
+    } as unknown as Awaited<ReturnType<typeof generateObject>>);
   });
 
   it("should create a command named 'prompt'", () => {
@@ -222,5 +234,151 @@ describe("prompt command", () => {
       "document.pdf",
       "data.csv",
     ]);
+  });
+
+  describe("--schema option", () => {
+    it("should parse schema with parseConciseJsonSchemaDsl when -S is provided", async () => {
+      const cmd = prompt();
+      await cmd.parseAsync([
+        "node",
+        "test",
+        "-S",
+        "name str, age int",
+        "test prompt",
+      ]);
+
+      expect(parseConciseJsonSchemaDsl).toHaveBeenCalledWith("name str, age int");
+    });
+
+    it("should use generateObject when schema is valid", async () => {
+      const mockSchema = {
+        type: "object" as const,
+        properties: { name: { type: "string" as const } },
+        required: ["name"],
+      };
+      vi.mocked(parseConciseJsonSchemaDsl).mockReturnValue(mockSchema);
+
+      const cmd = prompt();
+      await cmd.parseAsync([
+        "node",
+        "test",
+        "-S",
+        "name str",
+        "generate a name",
+      ]);
+
+      expect(generateObject).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: "openai/gpt-5-mini",
+          schema: mockSchema,
+        }),
+      );
+      expect(streamText).not.toHaveBeenCalled();
+    });
+
+    it("should use streamText when schema is invalid (returns undefined)", async () => {
+      vi.mocked(parseConciseJsonSchemaDsl).mockReturnValue(undefined);
+
+      const cmd = prompt();
+      await cmd.parseAsync([
+        "node",
+        "test",
+        "-S",
+        "",
+        "test prompt",
+      ]);
+
+      expect(streamText).toHaveBeenCalled();
+      expect(generateObject).not.toHaveBeenCalled();
+    });
+
+    it("should use streamText when --schema is not provided", async () => {
+      const cmd = prompt();
+      await cmd.parseAsync(["node", "test", "test prompt"]);
+
+      expect(streamText).toHaveBeenCalled();
+      expect(generateObject).not.toHaveBeenCalled();
+      expect(parseConciseJsonSchemaDsl).not.toHaveBeenCalled();
+    });
+
+    it("should log the generated object to console", async () => {
+      const mockSchema = {
+        type: "object" as const,
+        properties: { name: { type: "string" as const } },
+        required: ["name"],
+      };
+      vi.mocked(parseConciseJsonSchemaDsl).mockReturnValue(mockSchema);
+      vi.mocked(generateObject).mockResolvedValue({
+        object: { name: "John Doe" },
+      } as unknown as Awaited<ReturnType<typeof generateObject>>);
+
+      const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+      const cmd = prompt();
+      await cmd.parseAsync([
+        "node",
+        "test",
+        "-S",
+        "name str",
+        "generate a name",
+      ]);
+
+      expect(consoleSpy).toHaveBeenCalledWith({ name: "John Doe" });
+      consoleSpy.mockRestore();
+    });
+
+    it("should pass messages to generateObject", async () => {
+      const mockMessages: ModelMessage[] = [
+        { role: "user", content: [{ type: "text", text: "generate" }] },
+      ];
+      vi.mocked(getMessages).mockResolvedValue(mockMessages);
+      const mockSchema = {
+        type: "object" as const,
+        properties: { x: { type: "string" as const } },
+        required: ["x"],
+      };
+      vi.mocked(parseConciseJsonSchemaDsl).mockReturnValue(mockSchema);
+
+      const cmd = prompt();
+      await cmd.parseAsync([
+        "node",
+        "test",
+        "-S",
+        "x str",
+        "generate",
+      ]);
+
+      expect(generateObject).toHaveBeenCalledWith(
+        expect.objectContaining({
+          messages: mockMessages,
+        }),
+      );
+    });
+
+    it("should pass providerOptions to generateObject", async () => {
+      const mockSchema = {
+        type: "object" as const,
+        properties: { x: { type: "string" as const } },
+        required: ["x"],
+      };
+      vi.mocked(parseConciseJsonSchemaDsl).mockReturnValue(mockSchema);
+
+      const cmd = prompt();
+      await cmd.parseAsync([
+        "node",
+        "test",
+        "-S",
+        "x str",
+        "-o",
+        "openai.temperature=0.5",
+        "generate",
+      ]);
+
+      expect(generateObject).toHaveBeenCalledWith(
+        expect.objectContaining({
+          providerOptions: { openai: { temperature: 0.5 } },
+        }),
+      );
+    });
   });
 });

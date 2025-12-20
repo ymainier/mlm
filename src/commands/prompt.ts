@@ -2,8 +2,9 @@ import { Command } from "commander";
 import { getPrompt } from "../utils/input";
 import { collect, parseProviderOptions } from "../utils/options";
 import { getMessages } from "../utils/get-messages";
-import { streamText } from "ai";
+import { streamText, generateObject, jsonSchema } from "ai";
 import { printTextStream } from "../utils/print-text-stream";
+import { parseConciseJsonSchemaDsl } from "../utils/parse-concise-json-schema-dsl";
 
 export function prompt() {
   const cmd = new Command("prompt");
@@ -27,6 +28,7 @@ export function prompt() {
       collect,
       [],
     )
+    .option("-S, --schema <schema>", "JSON schema DSL for structured output")
     .argument("<prompt>", "prompt text (use - for stdin)")
     .action(
       async (
@@ -36,20 +38,39 @@ export function prompt() {
           model,
           option,
           attachment,
+          schema,
         }: {
           system?: string;
           model: string;
           option: string[];
           attachment: string[];
+          schema?: string;
         },
       ) => {
         const prompt = await getPrompt(input);
         const providerOptions = parseProviderOptions(option);
         const messages = await getMessages(system, prompt, attachment);
 
-        const { textStream } = streamText({ model, providerOptions, messages });
+        const parsedSchema = schema
+          ? parseConciseJsonSchemaDsl(schema)
+          : undefined;
 
-        await printTextStream(textStream);
+        if (parsedSchema) {
+          const { object } = await generateObject({
+            model,
+            providerOptions,
+            messages,
+            schema: jsonSchema(parsedSchema),
+          });
+          console.log(object);
+        } else {
+          const { textStream } = streamText({
+            model,
+            providerOptions,
+            messages,
+          });
+          await printTextStream(textStream);
+        }
       },
     );
 
