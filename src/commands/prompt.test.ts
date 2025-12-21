@@ -328,7 +328,9 @@ describe("prompt command", () => {
         "generate a name",
       ]);
 
-      expect(consoleSpy).toHaveBeenCalledWith({ name: "John Doe" });
+      expect(consoleSpy).toHaveBeenCalledWith(
+        JSON.stringify({ name: "John Doe" }, null, 2),
+      );
       consoleSpy.mockRestore();
     });
 
