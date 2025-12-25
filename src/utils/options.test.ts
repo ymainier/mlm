@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { parseProviderOptions, collect } from "./options";
+import {
+  parseProviderOptions,
+  collect,
+  modelOption,
+  providerOption,
+  attachmentOption,
+  outputOption,
+} from "./options";
 
 describe("parseProviderOptions", () => {
   it("should return empty object for empty array", () => {
@@ -108,5 +115,95 @@ describe("collect", () => {
     result = collect("b", result);
     result = collect("c", result);
     expect(result).toEqual(["a", "b", "c"]);
+  });
+});
+
+describe("modelOption", () => {
+  it("should have correct flags", () => {
+    const opt = modelOption();
+    expect(opt.flags).toBe("-m, --model <provider/model>");
+  });
+
+  it("should have correct description", () => {
+    const opt = modelOption();
+    expect(opt.description).toBe("model to use");
+  });
+
+  it("should have no default when not provided", () => {
+    const opt = modelOption();
+    expect(opt.defaultValue).toBeUndefined();
+  });
+
+  it("should set default when provided", () => {
+    const opt = modelOption("openai/gpt-4");
+    expect(opt.defaultValue).toBe("openai/gpt-4");
+  });
+});
+
+describe("providerOption", () => {
+  it("should have correct flags", () => {
+    const opt = providerOption();
+    expect(opt.flags).toBe("-o, --option <provider.key=value>");
+  });
+
+  it("should have correct description", () => {
+    const opt = providerOption();
+    expect(opt.description).toBe("provider option (repeatable)");
+  });
+
+  it("should have empty array as default", () => {
+    const opt = providerOption();
+    expect(opt.defaultValue).toEqual([]);
+  });
+
+  it("should have an argParser set", () => {
+    const opt = providerOption();
+    expect(opt.parseArg).toBeDefined();
+  });
+});
+
+describe("attachmentOption", () => {
+  it("should have correct flags", () => {
+    const opt = attachmentOption();
+    expect(opt.flags).toBe("-a, --attachment <path>");
+  });
+
+  it("should have correct description", () => {
+    const opt = attachmentOption();
+    expect(opt.description).toBe("file attachment (repeatable)");
+  });
+
+  it("should have empty array as default", () => {
+    const opt = attachmentOption();
+    expect(opt.defaultValue).toEqual([]);
+  });
+
+  it("should have an argParser set", () => {
+    const opt = attachmentOption();
+    expect(opt.parseArg).toBeDefined();
+  });
+});
+
+describe("outputOption", () => {
+  it("should have correct flags", () => {
+    const opt = outputOption();
+    expect(opt.flags).toBe("-O, --output <path>");
+  });
+
+  it("should have correct description", () => {
+    const opt = outputOption();
+    expect(opt.description).toBe(
+      "output file path (repeatable, extras saved to temp)",
+    );
+  });
+
+  it("should have empty array as default", () => {
+    const opt = outputOption();
+    expect(opt.defaultValue).toEqual([]);
+  });
+
+  it("should have an argParser set", () => {
+    const opt = outputOption();
+    expect(opt.parseArg).toBeDefined();
   });
 });

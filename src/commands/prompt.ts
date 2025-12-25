@@ -1,7 +1,12 @@
 import { Command } from "commander";
 import { exit } from "node:process";
 import { getPrompt } from "../utils/input";
-import { collect, parseProviderOptions } from "../utils/options";
+import {
+  attachmentOption,
+  modelOption,
+  parseProviderOptions,
+  providerOption,
+} from "../utils/options";
 import { getMessages } from "../utils/get-messages";
 import { streamText, generateObject, jsonSchema } from "ai";
 import { printTextStream } from "../utils/print-text-stream";
@@ -69,19 +74,9 @@ export function prompt() {
       "-s, --system <system>",
       "system prompt to guide the model behavior",
     )
-    .option("-m, --model <provider/model>", "model to use")
-    .option(
-      "-o, --option <provider.key=value>",
-      "provider option (repeatable)",
-      collect,
-      [],
-    )
-    .option(
-      "-a, --attachment <path>",
-      "file attachment (repeatable)",
-      collect,
-      [],
-    )
+    .addOption(modelOption())
+    .addOption(providerOption())
+    .addOption(attachmentOption())
     .option("-S, --schema <schema>", "JSON schema DSL for structured output")
     .option("-t, --template <name>", "template name to use")
     .argument("[prompt]", "prompt text (use - for stdin)")

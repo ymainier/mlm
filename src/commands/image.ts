@@ -3,7 +3,13 @@ import { generateText, type ModelMessage, type UserContent } from "ai";
 import { Command } from "commander";
 import { getAttachmentContent } from "../utils/attachments";
 import { getPrompt } from "../utils/input";
-import { collect, parseProviderOptions } from "../utils/options";
+import {
+  attachmentOption,
+  modelOption,
+  outputOption,
+  parseProviderOptions,
+  providerOption,
+} from "../utils/options";
 import { save, validateOutputPaths } from "../utils/images";
 
 const IMAGE_SYSTEM_PROMPT = `
@@ -16,29 +22,10 @@ export function image() {
 
   cmd
     .description("Generate images using multimodal models")
-    .option(
-      "-m, --model <provider/model>",
-      "image model to use",
-      "google/gemini-2.5-flash-image",
-    )
-    .option(
-      "-a, --attachment <path>",
-      "path to input file (repeatable)",
-      collect,
-      [],
-    )
-    .option(
-      "-o, --option <provider.key=value>",
-      "provider option (repeatable)",
-      collect,
-      [],
-    )
-    .option(
-      "-O, --output <path>",
-      "output file path (repeatable, extras saved to temp)",
-      collect,
-      [],
-    )
+    .addOption(modelOption("google/gemini-2.5-flash-image"))
+    .addOption(attachmentOption())
+    .addOption(providerOption())
+    .addOption(outputOption())
     .argument("<prompt>", "description of the image (use - for stdin)")
     .action(
       async (

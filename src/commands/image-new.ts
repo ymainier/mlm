@@ -2,7 +2,12 @@ import { exit } from "node:process";
 import { experimental_generateImage as generateImage } from "ai";
 import { Command } from "commander";
 import { getPrompt } from "../utils/input";
-import { collect, parseProviderOptions } from "../utils/options";
+import {
+  modelOption,
+  outputOption,
+  parseProviderOptions,
+  providerOption,
+} from "../utils/options";
 import { save, validateOutputPaths } from "../utils/images";
 
 export function imageNew() {
@@ -10,23 +15,9 @@ export function imageNew() {
 
   cmd
     .description("Generate images using dedicated image generation models")
-    .option(
-      "-m, --model <provider/model>",
-      "image model to use",
-      "google/imagen-4.0-fast-generate-001",
-    )
-    .option(
-      "-o, --option <provider.key=value>",
-      "provider option (repeatable)",
-      collect,
-      [],
-    )
-    .option(
-      "-O, --output <path>",
-      "output file path (repeatable, extras saved to temp)",
-      collect,
-      [],
-    )
+    .addOption(modelOption("google/imagen-4.0-fast-generate-001"))
+    .addOption(providerOption())
+    .addOption(outputOption())
     .argument("<prompt>", "description of the image (use - for stdin)")
     .action(
       async (
