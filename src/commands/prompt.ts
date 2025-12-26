@@ -30,17 +30,21 @@ type PromptOptions = {
 async function getTemplate(
   templateName: string | undefined,
 ): Promise<Template> {
-  if (!templateName) return {};
+  const nameToLoad = templateName ?? "default";
+  const isDefault = templateName === undefined;
 
   try {
-    return loadTemplate(templateName);
+    return await loadTemplate(nameToLoad);
   } catch (error) {
     if (error instanceof TemplateNotFoundError) {
+      if (isDefault) {
+        return {}; // Default template not found, that's OK
+      }
       console.error(`Template ${error.templatePath} not found`);
       exit(1);
     }
     if (error instanceof TemplateParseError) {
-      console.error(`Invalid JSON in template: ${error.templateName}`);
+      console.error(`Invalid YAML in template: ${error.templateName}`);
       exit(1);
     }
     throw error;

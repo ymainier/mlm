@@ -5,7 +5,11 @@ import { getMessages } from "../utils/get-messages";
 import { printTextStream } from "../utils/print-text-stream";
 import { streamText, generateObject, type ModelMessage } from "ai";
 import { parseConciseJsonSchemaDsl } from "../utils/parse-concise-json-schema-dsl";
-import { loadTemplate } from "../utils/template";
+import {
+  loadTemplate,
+  TemplateNotFoundError,
+  TemplateParseError,
+} from "../utils/template";
 import { exit } from "node:process";
 
 vi.mock("../utils/input", () => ({ getPrompt: vi.fn() }));
@@ -19,9 +23,14 @@ vi.mock("ai", () => ({
 vi.mock("../utils/parse-concise-json-schema-dsl", () => ({
   parseConciseJsonSchemaDsl: vi.fn(),
 }));
-vi.mock("../utils/template", () => ({
-  loadTemplate: vi.fn(),
-}));
+vi.mock("../utils/template", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("../utils/template")>();
+  return {
+    ...actual,
+    loadTemplate: vi.fn(),
+  };
+});
 vi.mock("node:process", () => ({
   exit: vi.fn(),
 }));
@@ -42,6 +51,10 @@ describe("prompt command", () => {
       object: { result: "test" },
     } as unknown as Awaited<ReturnType<typeof generateObject>>);
     vi.spyOn(console, "log").mockImplementation(() => {});
+    // Default: default template not found (most tests don't use templates)
+    vi.mocked(loadTemplate).mockRejectedValue(
+      new TemplateNotFoundError("default", "/path/to/default.yaml"),
+    );
   });
 
   it("should create a command named 'prompt'", () => {
@@ -399,11 +412,71 @@ describe("prompt command", () => {
       expect(loadTemplate).toHaveBeenCalledWith("my-template");
     });
 
-    it("should not call loadTemplate when -t option is not provided", async () => {
+    it("should try to load default template when -t option is not provided", async () => {
       const cmd = prompt();
       await cmd.parseAsync(["node", "test", "test prompt"]);
 
-      expect(loadTemplate).not.toHaveBeenCalled();
+      expect(loadTemplate).toHaveBeenCalledWith("default");
+    });
+
+    it("should not error when default template does not exist", async () => {
+      vi.mocked(loadTemplate).mockRejectedValue(
+        new TemplateNotFoundError("default", "/path/to/default.yaml"),
+      );
+
+      const cmd = prompt();
+      await cmd.parseAsync(["node", "test", "test prompt"]);
+
+      expect(exit).not.toHaveBeenCalled();
+      expect(streamText).toHaveBeenCalled();
+    });
+
+    it("should use default template values when default template exists", async () => {
+      vi.mocked(loadTemplate).mockResolvedValue({
+        system: "default system",
+        model: "anthropic/claude-3-haiku",
+      });
+
+      const cmd = prompt();
+      await cmd.parseAsync(["node", "test", "test prompt"]);
+
+      expect(loadTemplate).toHaveBeenCalledWith("default");
+      expect(getMessages).toHaveBeenCalledWith(
+        "default system",
+        "test prompt",
+        [],
+      );
+      expect(streamText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: "anthropic/claude-3-haiku",
+        }),
+      );
+    });
+
+    it("should exit with error when default template has invalid YAML", async () => {
+      vi.mocked(loadTemplate).mockRejectedValue(
+        new TemplateParseError("default"),
+      );
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      // Make exit throw to stop execution
+      const exitMock = vi.mocked(exit).mockImplementation(() => {
+        throw new Error("exit");
+      });
+
+      const cmd = prompt();
+      await expect(
+        cmd.parseAsync(["node", "test", "test prompt"]),
+      ).rejects.toThrow("exit");
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "Invalid YAML in template: default",
+      );
+      expect(exit).toHaveBeenCalledWith(1);
+
+      consoleSpy.mockRestore();
+      exitMock.mockRestore();
     });
 
     it("should use template system when CLI system is not provided", async () => {
