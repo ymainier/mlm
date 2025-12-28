@@ -1,5 +1,8 @@
 #! /usr/bin/env tsx
-import "dotenv/config";
+import { config } from "dotenv";
+import { join } from "path";
+
+config({ path: join(import.meta.dirname, "..", ".env"), quiet: true });
 import { cli } from "./cli";
 
 try {
