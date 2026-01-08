@@ -5,6 +5,7 @@ A CLI tool for interacting with LLMs, inspired by Simon Willison's [llm](https:/
 ## Setup
 
 1. Install dependencies:
+
    ```bash
    pnpm install
    ```

@@ -24,8 +24,7 @@ vi.mock("../utils/parse-concise-json-schema-dsl", () => ({
   parseConciseJsonSchemaDsl: vi.fn(),
 }));
 vi.mock("../utils/template", async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import("../utils/template")>();
+  const actual = await importOriginal<typeof import("../utils/template")>();
   return {
     ...actual,
     loadTemplate: vi.fn(),
