@@ -20,13 +20,13 @@
     "@types/node": "^24.10.1",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
-    "globals": "^16.5.0",
+    "globals": "^17.0.0",
     "jiti": "^2.6.1",
     "prettier": "3.7.4",
-    "tsx": "^4.20.6",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.49.0",
-    "vitest": "^4.0.13"
+    "typescript-eslint": "^8.52.0",
+    "vitest": "^4.0.16"
   },
   "dependencies": {
     "@ai-sdk/gateway": "^2.0.17",
