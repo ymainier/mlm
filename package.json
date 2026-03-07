@@ -29,8 +29,8 @@
     "vitest": "^4.0.16"
   },
   "dependencies": {
-    "@ai-sdk/gateway": "^3.0.10",
-    "ai": "^6.0.23",
+    "@ai-sdk/gateway": "^3.0.66",
+    "ai": "^6.0.116",
     "commander": "^14.0.2",
     "dotenv": "^17.2.3",
     "file-type": "^21.3.0",
