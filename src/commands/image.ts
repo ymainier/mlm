@@ -22,7 +22,7 @@ export function image() {
 
   cmd
     .description("Generate images using multimodal models")
-    .addOption(modelOption("google/gemini-2.5-flash-image"))
+    .addOption(modelOption("google/gemini-3.1-flash-image-preview"))
     .addOption(attachmentOption())
     .addOption(providerOption())
     .addOption(outputOption())
