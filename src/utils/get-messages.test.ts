@@ -111,4 +111,28 @@ describe("getMessages", () => {
       { role: "user", content: [{ type: "text", text: "test" }] },
     ]);
   });
+
+  it("should prepend fragmentsText to the user message", async () => {
+    const messages = await getMessages(
+      undefined,
+      "summarize this",
+      [],
+      "fragment content",
+    );
+
+    expect(messages).toEqual([
+      {
+        role: "user",
+        content: [{ type: "text", text: "fragment content\n\nsummarize this" }],
+      },
+    ]);
+  });
+
+  it("should not prepend when fragmentsText is undefined", async () => {
+    const messages = await getMessages(undefined, "hello", [], undefined);
+
+    expect(messages).toEqual([
+      { role: "user", content: [{ type: "text", text: "hello" }] },
+    ]);
+  });
 });

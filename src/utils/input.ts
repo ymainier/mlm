@@ -12,8 +12,12 @@ export async function readStdin(): Promise<string> {
   });
 }
 
-export async function getPrompt(input: string): Promise<string> {
-  const shouldReadStdin = input === "-";
-  const isPiped = !process.stdin.isTTY;
-  return shouldReadStdin && isPiped ? await readStdin() : input;
+export async function getPrompt(
+  input: string,
+  stdinContent?: string,
+): Promise<string> {
+  if (input === "-") {
+    return stdinContent ?? (process.stdin.isTTY ? input : await readStdin());
+  }
+  return input;
 }

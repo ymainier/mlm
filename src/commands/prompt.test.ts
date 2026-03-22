@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { prompt } from "./prompt";
 import { getPrompt } from "../utils/input";
+import { resolveFragments } from "../utils/fragments";
 import { getMessages } from "../utils/get-messages";
 import { printTextStream } from "../utils/print-text-stream";
 import { streamText, generateObject, type ModelMessage } from "ai";
@@ -12,8 +13,9 @@ import {
 } from "../utils/template";
 import { exit } from "node:process";
 
-vi.mock("../utils/input", () => ({ getPrompt: vi.fn() }));
+vi.mock("../utils/input", () => ({ getPrompt: vi.fn(), readStdin: vi.fn() }));
 vi.mock("../utils/get-messages", () => ({ getMessages: vi.fn() }));
+vi.mock("../utils/fragments", () => ({ resolveFragments: vi.fn() }));
 vi.mock("../utils/print-text-stream", () => ({ printTextStream: vi.fn() }));
 vi.mock("ai", () => ({
   streamText: vi.fn(),
@@ -46,6 +48,7 @@ describe("prompt command", () => {
     } as unknown as ReturnType<typeof streamText>);
     vi.mocked(printTextStream).mockResolvedValue(undefined);
     vi.mocked(parseConciseJsonSchemaDsl).mockReturnValue(undefined);
+    vi.mocked(resolveFragments).mockResolvedValue(undefined);
     vi.mocked(generateObject).mockResolvedValue({
       object: { result: "test" },
     } as unknown as Awaited<ReturnType<typeof generateObject>>);
@@ -65,7 +68,7 @@ describe("prompt command", () => {
     const cmd = prompt();
     await cmd.parseAsync(["node", "test", "test prompt"]);
 
-    expect(getPrompt).toHaveBeenCalledWith("test prompt");
+    expect(getPrompt).toHaveBeenCalledWith("test prompt", undefined);
   });
 
   it("should call getMessages with the resolved prompt", async () => {
@@ -74,7 +77,12 @@ describe("prompt command", () => {
     const cmd = prompt();
     await cmd.parseAsync(["node", "test", "input"]);
 
-    expect(getMessages).toHaveBeenCalledWith(undefined, "resolved prompt", []);
+    expect(getMessages).toHaveBeenCalledWith(
+      undefined,
+      "resolved prompt",
+      [],
+      undefined,
+    );
   });
 
   it("should call streamText with messages from getMessages", async () => {
@@ -135,6 +143,7 @@ describe("prompt command", () => {
       "You are a helpful assistant.",
       "test prompt",
       [],
+      undefined,
     );
   });
 
@@ -224,16 +233,19 @@ describe("prompt command", () => {
     const cmd = prompt();
     await cmd.parseAsync(["node", "test", "test"]);
 
-    expect(getMessages).toHaveBeenCalledWith(undefined, "test", []);
+    expect(getMessages).toHaveBeenCalledWith(undefined, "test", [], undefined);
   });
 
   it("should pass single attachment via -a option", async () => {
     const cmd = prompt();
     await cmd.parseAsync(["node", "test", "-a", "image.png", "describe this"]);
 
-    expect(getMessages).toHaveBeenCalledWith(undefined, "describe this", [
-      "image.png",
-    ]);
+    expect(getMessages).toHaveBeenCalledWith(
+      undefined,
+      "describe this",
+      ["image.png"],
+      undefined,
+    );
   });
 
   it("should pass multiple attachments via repeated -a options", async () => {
@@ -250,11 +262,12 @@ describe("prompt command", () => {
       "summarize these",
     ]);
 
-    expect(getMessages).toHaveBeenCalledWith(undefined, "summarize these", [
-      "image.png",
-      "document.pdf",
-      "data.csv",
-    ]);
+    expect(getMessages).toHaveBeenCalledWith(
+      undefined,
+      "summarize these",
+      ["image.png", "document.pdf", "data.csv"],
+      undefined,
+    );
   });
 
   describe("--schema option", () => {
@@ -444,6 +457,7 @@ describe("prompt command", () => {
         "default system",
         "test prompt",
         [],
+        undefined,
       );
       expect(streamText).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -496,6 +510,7 @@ describe("prompt command", () => {
         "template system prompt",
         "test prompt",
         [],
+        undefined,
       );
     });
 
@@ -519,6 +534,7 @@ describe("prompt command", () => {
         "cli system prompt",
         "test prompt",
         [],
+        undefined,
       );
     });
 
@@ -651,10 +667,12 @@ describe("prompt command", () => {
         "test prompt",
       ]);
 
-      expect(getMessages).toHaveBeenCalledWith(undefined, "test prompt", [
-        "template-file.txt",
-        "cli-file.txt",
-      ]);
+      expect(getMessages).toHaveBeenCalledWith(
+        undefined,
+        "test prompt",
+        ["template-file.txt", "cli-file.txt"],
+        undefined,
+      );
     });
 
     it("should use template prompt when CLI prompt is not provided", async () => {
@@ -665,7 +683,7 @@ describe("prompt command", () => {
       const cmd = prompt();
       await cmd.parseAsync(["node", "test", "-t", "my-template"]);
 
-      expect(getPrompt).toHaveBeenCalledWith("template prompt");
+      expect(getPrompt).toHaveBeenCalledWith("template prompt", undefined);
     });
 
     it("should use CLI prompt when both CLI and template provide prompt", async () => {
@@ -676,7 +694,7 @@ describe("prompt command", () => {
       const cmd = prompt();
       await cmd.parseAsync(["node", "test", "-t", "my-template", "cli prompt"]);
 
-      expect(getPrompt).toHaveBeenCalledWith("cli prompt");
+      expect(getPrompt).toHaveBeenCalledWith("cli prompt", undefined);
     });
 
     it("should use template schema when CLI schema is not provided", async () => {

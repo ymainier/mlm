@@ -61,6 +61,15 @@ export function attachmentOption(): Option {
     .default([]);
 }
 
+export function fragmentOption(): Option {
+  return new Option(
+    "-f, --fragment <source>",
+    "fragment to prepend to prompt: file path, URL, or - for stdin (repeatable)",
+  )
+    .argParser(collect)
+    .default([]);
+}
+
 export function outputOption(): Option {
   return new Option(
     "-O, --output <path>",

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { readStdin } from "./input";
+import { readStdin, getPrompt } from "./input";
 
 describe("readStdin", () => {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
@@ -46,5 +46,19 @@ describe("readStdin", () => {
     listeners["error"]?.(error);
 
     await expect(promise).rejects.toThrow("Stream error");
+  });
+});
+
+describe("getPrompt", () => {
+  it("should return the input as-is when not -", async () => {
+    expect(await getPrompt("hello")).toBe("hello");
+  });
+
+  it("should return pre-read stdinContent when input is -", async () => {
+    expect(await getPrompt("-", "piped content")).toBe("piped content");
+  });
+
+  it("should return empty string when input is - and stdinContent is empty string", async () => {
+    expect(await getPrompt("-", "")).toBe("");
   });
 });

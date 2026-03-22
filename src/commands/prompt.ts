@@ -1,8 +1,10 @@
 import { Command } from "commander";
 import { exit } from "node:process";
-import { getPrompt } from "../utils/input";
+import { getPrompt, readStdin } from "../utils/input";
+import { resolveFragments } from "../utils/fragments";
 import {
   attachmentOption,
+  fragmentOption,
   modelOption,
   parseProviderOptions,
   providerOption,
@@ -23,6 +25,7 @@ type PromptOptions = {
   model?: string;
   option: string[];
   attachment: string[];
+  fragment: string[];
   schema?: string;
   template?: string;
 };
@@ -81,6 +84,7 @@ export function prompt() {
     .addOption(modelOption())
     .addOption(providerOption())
     .addOption(attachmentOption())
+    .addOption(fragmentOption())
     .option("-S, --schema <schema>", "JSON schema DSL for structured output")
     .option("-t, --template <name>", "template name to use")
     .argument("[prompt]", "prompt text (use - for stdin)")
@@ -94,9 +98,23 @@ export function prompt() {
         exit(1);
       }
 
-      const prompt = await getPrompt(params.prompt);
+      const needsStdin =
+        params.prompt === "-" || cliOptions.fragment.includes("-");
+      const stdinContent =
+        needsStdin && !process.stdin.isTTY ? await readStdin() : undefined;
+
+      const prompt = await getPrompt(params.prompt, stdinContent);
       const providerOptions = parseProviderOptions(options ?? []);
-      const messages = await getMessages(system, prompt, attachments);
+      const fragmentsText = await resolveFragments(
+        cliOptions.fragment,
+        stdinContent,
+      );
+      const messages = await getMessages(
+        system,
+        prompt,
+        attachments,
+        fragmentsText,
+      );
       const parsedSchema = schema
         ? parseConciseJsonSchemaDsl(schema)
         : undefined;

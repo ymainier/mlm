@@ -36,6 +36,16 @@ echo "Summarize this" | pnpm dev -
 cat file.txt | pnpm dev - "What does this code do?"
 ```
 
+Add fragments (text prepended to your prompt) with `-f`/`--fragment`:
+
+```bash
+pnpm dev -f README.md "Summarize this"
+pnpm dev -f https://example.com/doc.txt "What does this say?"
+cat context.txt | pnpm dev -f - "Answer based on the above"
+# Multiple fragments are combined
+pnpm dev -f part1.md -f part2.md "Compare these"
+```
+
 Add file attachments with `-a`/`--attachment`:
 
 ```bash

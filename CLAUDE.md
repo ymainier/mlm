@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A Node.js CLI tool inspired by Simon Willison's `llm` for interacting with various LLM providers. Uses the Vercel AI SDK with their gateway for unified access to multiple providers.
 
+## Development Expectations
+
+When implementing new functionality, always write tests for new code and run the existing test suite, lint, and format to verify nothing is broken.
+
 ## Commands
 
 - `pnpm dev <prompt>` - Run the CLI in development mode (default command is `prompt`)
@@ -31,10 +35,11 @@ The CLI is built with Commander.js and uses the Vercel AI SDK Gateway (`@ai-sdk/
 
 **Key Utilities:**
 
-- `src/utils/options.ts` - Shared Commander options (`-m/--model`, `-o/--option`, `-a/--attachment`, `-O/--output`)
+- `src/utils/options.ts` - Shared Commander options (`-m/--model`, `-o/--option`, `-a/--attachment`, `-f/--fragment`, `-O/--output`)
 - `src/utils/template.ts` - Template loading from `~/.mlm/templates/*.yaml`
 - `src/utils/input.ts` - Handles stdin reading; use `-` as prompt argument to pipe input
-- `src/utils/get-messages.ts` - Builds AI SDK messages from system prompt, user prompt, and attachments
+- `src/utils/fragments.ts` - Resolves fragment sources (file, URL, stdin) and joins them for prepending to the prompt
+- `src/utils/get-messages.ts` - Builds AI SDK messages from system prompt, user prompt, attachments, and fragments
 
 **Model format:** All commands use `provider/model` format (e.g., `openai/gpt-5-mini`, `google/gemini-2.5-flash-image`)
 
