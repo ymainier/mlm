@@ -55,11 +55,11 @@ describe("image command", () => {
 
     expect(generateText).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: "google/gemini-2.5-flash-image",
+        model: "google/gemini-3.1-flash-image-preview",
         messages: expect.arrayContaining([
           expect.objectContaining({
             role: "system",
-            content: expect.stringContaining("generating images"),
+            content: expect.stringContaining("image"),
           }),
           expect.objectContaining({
             role: "user",
