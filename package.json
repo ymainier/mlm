@@ -8,7 +8,7 @@
     "dev": "tsx src/index.ts",
     "format": "prettier '**/*.{js,ts,mjs,cjs,json,md}' --write",
     "lint": "eslint . --ext .ts",
-    "test": "vitest",
+    "test": "vitest --run",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],
