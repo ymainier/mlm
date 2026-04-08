@@ -1,7 +1,7 @@
 import type { GeneratedFile } from "ai";
 import { access, writeFile } from "node:fs/promises";
 import { constants } from "node:fs";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import path from "node:path";
 
 /**
@@ -39,7 +39,6 @@ export async function save(
   outputs?: string[],
 ): Promise<Array<string>> {
   const paths: Array<string> = [];
-  const outputDir = tmpdir();
   const timestamp = Date.now();
 
   for (const [index, image] of images.entries()) {
@@ -49,6 +48,12 @@ export async function save(
     if (specifiedOutput) {
       filepath = specifiedOutput;
     } else {
+      let outputDir = path.join(homedir(), "Downloads");
+      try {
+        await access(outputDir, constants.W_OK);
+      } catch {
+        outputDir = tmpdir();
+      }
       const extension = image.mediaType?.split("/")[1] || "png";
       const filename = `image-${timestamp}-${index}.${extension}`;
       filepath = path.join(outputDir, filename);

@@ -9,6 +9,7 @@ vi.mock("node:fs/promises", () => ({
 }));
 
 vi.mock("node:os", () => ({
+  homedir: vi.fn(() => "/home/user"),
   tmpdir: vi.fn(() => "/tmp"),
 }));
 
@@ -20,6 +21,7 @@ describe("save", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(writeFile).mockResolvedValue(undefined);
+    vi.mocked(access).mockRejectedValue(new Error("EACCES")); // Downloads not writable → fall back to tmpdir
   });
 
   it("should save a single image to temp directory", async () => {

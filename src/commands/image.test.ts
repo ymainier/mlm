@@ -26,7 +26,10 @@ vi.mock("node:process", () => ({
 function createMockTextResult(
   files: Array<{ mediaType: string; uint8Array: Uint8Array }>,
 ): Awaited<ReturnType<typeof generateText>> {
-  return { files } as unknown as Awaited<ReturnType<typeof generateText>>;
+  return {
+    files,
+    response: { body: { content: [] } },
+  } as unknown as Awaited<ReturnType<typeof generateText>>;
 }
 
 describe("image command", () => {
