@@ -13,19 +13,22 @@ export interface Template {
 }
 
 export class TemplateNotFoundError extends Error {
-  constructor(
-    public readonly templateName: string,
-    public readonly templatePath: string,
-  ) {
+  readonly templateName: string;
+  readonly templatePath: string;
+  constructor(templateName: string, templatePath: string) {
     super(`Template not found: ${templateName}\nExpected at: ${templatePath}`);
     this.name = "TemplateNotFoundError";
+    this.templateName = templateName;
+    this.templatePath = templatePath;
   }
 }
 
 export class TemplateParseError extends Error {
-  constructor(public readonly templateName: string) {
+  readonly templateName: string;
+  constructor(templateName: string) {
     super(`Invalid YAML in template: ${templateName}`);
     this.name = "TemplateParseError";
+    this.templateName = templateName;
   }
 }
 

@@ -1,8 +1,8 @@
 import { program } from "commander";
-import { image } from "./commands/image";
-import { imageNew } from "./commands/image-new";
-import { models } from "./commands/models";
-import { prompt } from "./commands/prompt";
+import { image } from "./commands/image.ts";
+import { imageNew } from "./commands/image-new.ts";
+import { models } from "./commands/models.ts";
+import { prompt } from "./commands/prompt.ts";
 
 export async function cli() {
   program.addCommand(image());

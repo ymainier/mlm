@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { Command, program } from "commander";
-import { cli } from "./cli";
-import { prompt } from "./commands/prompt";
+import { cli } from "./cli.ts";
+import { prompt } from "./commands/prompt.ts";
 
 vi.mock("./commands/prompt");
 

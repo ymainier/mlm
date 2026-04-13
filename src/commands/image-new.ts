@@ -1,14 +1,14 @@
 import { exit } from "node:process";
 import { experimental_generateImage as generateImage } from "ai";
 import { Command } from "commander";
-import { getPrompt } from "../utils/input";
+import { getPrompt } from "../utils/input.ts";
 import {
   modelOption,
   outputOption,
   parseProviderOptions,
   providerOption,
-} from "../utils/options";
-import { save, validateOutputPaths } from "../utils/images";
+} from "../utils/options.ts";
+import { save, validateOutputPaths } from "../utils/images.ts";
 
 export function imageNew() {
   const cmd = new Command("image-new");

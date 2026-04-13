@@ -1,9 +1,9 @@
-#! /usr/bin/env tsx
+#!/usr/bin/env -S node --strip-types
 import { config } from "dotenv";
 import { join } from "path";
 
 config({ path: join(import.meta.dirname, "..", ".env"), quiet: true });
-import { cli } from "./cli";
+import { cli } from "./cli.ts";
 
 try {
   await cli();

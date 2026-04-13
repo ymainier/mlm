@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { resolveFragments } from "./fragments";
+import { resolveFragments } from "./fragments.ts";
 import { readFile } from "node:fs/promises";
 
 vi.mock("node:fs/promises", () => ({ readFile: vi.fn() }));

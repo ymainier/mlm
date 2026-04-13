@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseConciseJsonSchemaDsl } from "./parse-concise-json-schema-dsl";
+import { parseConciseJsonSchemaDsl } from "./parse-concise-json-schema-dsl.ts";
 
 describe("parseConciseJsonSchemaDsl", () => {
   describe("basic parsing", () => {

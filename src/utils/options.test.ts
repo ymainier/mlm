@@ -6,7 +6,7 @@ import {
   providerOption,
   attachmentOption,
   outputOption,
-} from "./options";
+} from "./options.ts";
 
 describe("parseProviderOptions", () => {
   it("should return empty object for empty array", () => {

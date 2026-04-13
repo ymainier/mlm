@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { experimental_generateImage as generateImage } from "ai";
-import { imageNew } from "./image-new";
-import { getPrompt } from "../utils/input";
-import { save, validateOutputPaths } from "../utils/images";
+import { imageNew } from "./image-new.ts";
+import { getPrompt } from "../utils/input.ts";
+import { save, validateOutputPaths } from "../utils/images.ts";
 import { exit } from "node:process";
 
 vi.mock("../utils/input", () => ({ getPrompt: vi.fn() }));

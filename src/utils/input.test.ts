@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { readStdin, getPrompt } from "./input";
+import { readStdin, getPrompt } from "./input.ts";
 
 describe("readStdin", () => {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type

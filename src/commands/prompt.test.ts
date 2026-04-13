@@ -1,18 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { prompt } from "./prompt";
-import { getPrompt } from "../utils/input";
-import { resolveFragments } from "../utils/fragments";
-import { getMessages } from "../utils/get-messages";
-import { printTextStream } from "../utils/print-text-stream";
+import { prompt } from "./prompt.ts";
+import { getPrompt } from "../utils/input.ts";
+import { resolveFragments } from "../utils/fragments.ts";
+import { getMessages } from "../utils/get-messages.ts";
+import { printTextStream } from "../utils/print-text-stream.ts";
 import { streamText, generateObject, type ModelMessage } from "ai";
-import { parseConciseJsonSchemaDsl } from "../utils/parse-concise-json-schema-dsl";
+import { parseConciseJsonSchemaDsl } from "../utils/parse-concise-json-schema-dsl.ts";
 import {
   loadTemplate,
   TemplateNotFoundError,
   TemplateParseError,
-} from "../utils/template";
+} from "../utils/template.ts";
 import { exit } from "node:process";
-import { resolveModel } from "../utils/resolve-model";
+import { resolveModel } from "../utils/resolve-model.ts";
 
 vi.mock("../utils/input", () => ({ getPrompt: vi.fn(), readStdin: vi.fn() }));
 vi.mock("../utils/get-messages", () => ({ getMessages: vi.fn() }));

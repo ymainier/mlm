@@ -1,25 +1,25 @@
 import { Command } from "commander";
 import { exit } from "node:process";
-import { getPrompt, readStdin } from "../utils/input";
-import { resolveFragments } from "../utils/fragments";
+import { getPrompt, readStdin } from "../utils/input.ts";
+import { resolveFragments } from "../utils/fragments.ts";
 import {
   attachmentOption,
   fragmentOption,
   modelOption,
   parseProviderOptions,
   providerOption,
-} from "../utils/options";
-import { getMessages } from "../utils/get-messages";
+} from "../utils/options.ts";
+import { getMessages } from "../utils/get-messages.ts";
 import { streamText, generateObject, jsonSchema } from "ai";
-import { resolveModel } from "../utils/resolve-model";
-import { printTextStream } from "../utils/print-text-stream";
-import { parseConciseJsonSchemaDsl } from "../utils/parse-concise-json-schema-dsl";
+import { resolveModel } from "../utils/resolve-model.ts";
+import { printTextStream } from "../utils/print-text-stream.ts";
+import { parseConciseJsonSchemaDsl } from "../utils/parse-concise-json-schema-dsl.ts";
 import {
   loadTemplate,
   TemplateNotFoundError,
   TemplateParseError,
   type Template,
-} from "../utils/template";
+} from "../utils/template.ts";
 
 type PromptOptions = {
   system?: string;

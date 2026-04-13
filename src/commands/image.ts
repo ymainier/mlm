@@ -1,17 +1,17 @@
 import { exit } from "node:process";
 import { generateText, type ModelMessage, type UserContent } from "ai";
-import { resolveModel } from "../utils/resolve-model";
+import { resolveModel } from "../utils/resolve-model.ts";
 import { Command } from "commander";
-import { getAttachmentContent } from "../utils/attachments";
-import { getPrompt } from "../utils/input";
+import { getAttachmentContent } from "../utils/attachments.ts";
+import { getPrompt } from "../utils/input.ts";
 import {
   attachmentOption,
   modelOption,
   outputOption,
   parseProviderOptions,
   providerOption,
-} from "../utils/options";
-import { save, validateOutputPaths } from "../utils/images";
+} from "../utils/options.ts";
+import { save, validateOutputPaths } from "../utils/images.ts";
 
 const IMAGE_SYSTEM_PROMPT = `
 You are an AI model specialized in generating images based on textual descriptions.

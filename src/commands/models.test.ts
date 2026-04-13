@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { gateway } from "@ai-sdk/gateway";
-import { models } from "./models";
+import { models } from "./models.ts";
 
 vi.mock("@ai-sdk/gateway", () => ({
   gateway: {

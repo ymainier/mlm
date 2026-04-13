@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { generateText } from "ai";
-import { image } from "./image";
-import { getPrompt } from "../utils/input";
-import { save, validateOutputPaths } from "../utils/images";
-import { getAttachmentContent } from "../utils/attachments";
+import { image } from "./image.ts";
+import { getPrompt } from "../utils/input.ts";
+import { save, validateOutputPaths } from "../utils/images.ts";
+import { getAttachmentContent } from "../utils/attachments.ts";
 import { exit } from "node:process";
 
 vi.mock("../utils/input", () => ({ getPrompt: vi.fn() }));

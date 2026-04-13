@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { access, writeFile } from "node:fs/promises";
-import { save, validateOutputPaths } from "./images";
+import { save, validateOutputPaths } from "./images.ts";
 import type { GeneratedFile } from "ai";
 
 vi.mock("node:fs/promises", () => ({

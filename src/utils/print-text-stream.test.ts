@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { AsyncIterableStream } from "ai";
-import { printTextStream } from "./print-text-stream";
+import { printTextStream } from "./print-text-stream.ts";
 
 describe("printTextStream", () => {
   beforeEach(() => {

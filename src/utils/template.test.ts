@@ -16,7 +16,7 @@ import {
   getTemplatePath,
   TemplateNotFoundError,
   TemplateParseError,
-} from "./template";
+} from "./template.ts";
 
 describe("loadTemplate", () => {
   beforeEach(() => {

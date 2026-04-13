@@ -1,5 +1,5 @@
 import type { ModelMessage, UserContent } from "ai";
-import { getAttachmentContent } from "./attachments";
+import { getAttachmentContent } from "./attachments.ts";
 
 export async function getMessages(
   system: string | undefined,

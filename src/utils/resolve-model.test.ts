@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { resolveModel } from "./resolve-model";
+import { resolveModel } from "./resolve-model.ts";
 
 vi.mock("ollama-ai-provider-v2", () => ({
   ollama: vi.fn((modelId: string) => ({ type: "ollama-model", modelId })),

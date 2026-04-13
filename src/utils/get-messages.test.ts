@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { getMessages } from "./get-messages";
-import { getAttachmentContent } from "./attachments";
+import { getMessages } from "./get-messages.ts";
+import { getAttachmentContent } from "./attachments.ts";
 
 vi.mock("./attachments", () => ({ getAttachmentContent: vi.fn() }));
 
