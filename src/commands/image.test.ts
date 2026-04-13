@@ -22,6 +22,9 @@ vi.mock("../utils/attachments", () => ({
 vi.mock("node:process", () => ({
   exit: vi.fn(),
 }));
+vi.mock("../utils/resolve-model", () => ({
+  resolveModel: vi.fn((modelId: string) => modelId),
+}));
 
 function createMockTextResult(
   files: Array<{ mediaType: string; uint8Array: Uint8Array }>,

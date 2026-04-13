@@ -12,6 +12,7 @@ import {
   TemplateParseError,
 } from "../utils/template";
 import { exit } from "node:process";
+import { resolveModel } from "../utils/resolve-model";
 
 vi.mock("../utils/input", () => ({ getPrompt: vi.fn(), readStdin: vi.fn() }));
 vi.mock("../utils/get-messages", () => ({ getMessages: vi.fn() }));
@@ -24,6 +25,9 @@ vi.mock("ai", () => ({
 }));
 vi.mock("../utils/parse-concise-json-schema-dsl", () => ({
   parseConciseJsonSchemaDsl: vi.fn(),
+}));
+vi.mock("../utils/resolve-model", () => ({
+  resolveModel: vi.fn((modelId: string) => modelId),
 }));
 vi.mock("../utils/template", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../utils/template")>();
@@ -226,6 +230,27 @@ describe("prompt command", () => {
       expect.objectContaining({
         providerOptions: { openai: { logprobs: true, maxTokens: 1000 } },
       }),
+    );
+  });
+
+  it("should pass resolved model to streamText", async () => {
+    const mockModel = { type: "ollama-model", modelId: "qwen3:8b" };
+    vi.mocked(resolveModel).mockReturnValueOnce(
+      mockModel as unknown as ReturnType<typeof resolveModel>,
+    );
+
+    const cmd = prompt();
+    await cmd.parseAsync([
+      "node",
+      "test",
+      "-m",
+      "ollama/qwen3:8b",
+      "test prompt",
+    ]);
+
+    expect(resolveModel).toHaveBeenCalledWith("ollama/qwen3:8b");
+    expect(streamText).toHaveBeenCalledWith(
+      expect.objectContaining({ model: mockModel }),
     );
   });
 

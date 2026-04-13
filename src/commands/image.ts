@@ -1,5 +1,6 @@
 import { exit } from "node:process";
 import { generateText, type ModelMessage, type UserContent } from "ai";
+import { resolveModel } from "../utils/resolve-model";
 import { Command } from "commander";
 import { getAttachmentContent } from "../utils/attachments";
 import { getPrompt } from "../utils/input";
@@ -60,7 +61,11 @@ export function image() {
         messages.push({ role: "user", content });
 
         const providerOptions = parseProviderOptions(option);
-        const result = await generateText({ model, messages, providerOptions });
+        const result = await generateText({
+          model: resolveModel(model),
+          messages,
+          providerOptions,
+        });
 
         const images = result.files.filter((f) =>
           f.mediaType?.startsWith("image/"),

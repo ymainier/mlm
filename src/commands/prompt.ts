@@ -11,6 +11,7 @@ import {
 } from "../utils/options";
 import { getMessages } from "../utils/get-messages";
 import { streamText, generateObject, jsonSchema } from "ai";
+import { resolveModel } from "../utils/resolve-model";
 import { printTextStream } from "../utils/print-text-stream";
 import { parseConciseJsonSchemaDsl } from "../utils/parse-concise-json-schema-dsl";
 import {
@@ -119,9 +120,10 @@ export function prompt() {
         ? parseConciseJsonSchemaDsl(schema)
         : undefined;
 
+      const resolvedModel = resolveModel(model);
       if (parsedSchema) {
         const { object } = await generateObject({
-          model,
+          model: resolvedModel,
           providerOptions,
           messages,
           schema: jsonSchema(parsedSchema),
@@ -129,7 +131,7 @@ export function prompt() {
         console.log(JSON.stringify(object, null, 2));
       } else {
         const { textStream } = streamText({
-          model,
+          model: resolvedModel,
           providerOptions,
           messages,
         });

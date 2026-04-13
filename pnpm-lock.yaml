@@ -23,6 +23,9 @@ importers:
       file-type:
         specifier: ^21.3.0
         version: 21.3.0
+      ollama-ai-provider-v2:
+        specifier: ^3.5.0
+        version: 3.5.0(ai@6.0.116(zod@4.1.12))(zod@4.1.12)
       table:
         specifier: ^6.9.0
         version: 6.9.0
@@ -875,6 +878,13 @@ packages:
 
   obug@2.1.1:
     resolution: {integrity: sha512-uTqF9MuPraAQ+IsnPf366RG4cP9RtUi7MLO1N3KEc+wb0a6yKpeL0lmk2IB1jY5KHPAlTc6T/JRdC/YqxHNwkQ==}
+
+  ollama-ai-provider-v2@3.5.0:
+    resolution: {integrity: sha512-+s/aYIYa91z2Vk3AkGAz3BaPAQ0flS2eFZD3BN2mD/N6W6YQbcookyu6pc2cbc8SP5VGpNB857WJ0eHDjKXsXw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      ai: ^5.0.0 || ^6.0.0
+      zod: ^4.0.16
 
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
@@ -1875,6 +1885,13 @@ snapshots:
   natural-compare@1.4.0: {}
 
   obug@2.1.1: {}
+
+  ollama-ai-provider-v2@3.5.0(ai@6.0.116(zod@4.1.12))(zod@4.1.12):
+    dependencies:
+      '@ai-sdk/provider': 3.0.8
+      '@ai-sdk/provider-utils': 4.0.19(zod@4.1.12)
+      ai: 6.0.116(zod@4.1.12)
+      zod: 4.1.12
 
   optionator@0.9.4:
     dependencies:
