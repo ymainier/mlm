@@ -1,9 +1,9 @@
 import { exit } from "node:process";
-import { generateText, type ModelMessage, type UserContent } from "ai";
+import { generateText } from "ai";
 import { resolveModel } from "../utils/resolve-model.ts";
 import { Command } from "commander";
-import { getAttachmentContent } from "../utils/attachments.ts";
 import { getPrompt } from "../utils/input.ts";
+import { getMessages } from "../utils/get-messages.ts";
 import {
   attachmentOption,
   modelOption,
@@ -50,15 +50,12 @@ export function image() {
           exit(1);
         }
 
-        const messages: Array<ModelMessage> = [
-          { role: "system", content: IMAGE_SYSTEM_PROMPT },
-        ];
-        const content: Exclude<UserContent, "string"> = [];
-        for (const path of attachment) {
-          content.push(await getAttachmentContent(path));
-        }
-        content.push({ type: "text", text: await getPrompt(input) });
-        messages.push({ role: "user", content });
+        const prompt = await getPrompt(input);
+        const messages = await getMessages(
+          IMAGE_SYSTEM_PROMPT,
+          prompt,
+          attachment,
+        );
 
         const providerOptions = parseProviderOptions(option);
         const result = await generateText({

@@ -28,8 +28,6 @@ export function imageNew() {
           output,
         }: { model: string; option: string[]; output: string[] },
       ) => {
-        const prompt = await getPrompt(input);
-
         try {
           await validateOutputPaths(output);
         } catch (err) {
@@ -37,8 +35,9 @@ export function imageNew() {
           exit(1);
         }
 
+        const prompt = await getPrompt(input);
         const providerOptions = parseProviderOptions(option);
-        let result;
+        let result: Awaited<ReturnType<typeof generateImage>>;
         try {
           result = await generateImage({ model, prompt, providerOptions });
         } catch (error) {
