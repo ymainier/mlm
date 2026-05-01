@@ -10,7 +10,7 @@ import {
   providerOption,
 } from "../utils/options.ts";
 import { getMessages } from "../utils/get-messages.ts";
-import { streamText, generateObject, jsonSchema } from "ai";
+import { streamText, generateObject, jsonSchema, type ModelMessage } from "ai";
 import { resolveModel } from "../utils/resolve-model.ts";
 import { printTextStream } from "../utils/print-text-stream.ts";
 import { parseConciseJsonSchemaDsl } from "../utils/parse-concise-json-schema-dsl.ts";
@@ -20,6 +20,12 @@ import {
   TemplateParseError,
   type Template,
 } from "../utils/template.ts";
+import {
+  createConversation,
+  loadConversation,
+  getLatestConversation,
+  saveConversation,
+} from "../utils/conversation.ts";
 
 type PromptOptions = {
   system?: string;
@@ -29,6 +35,8 @@ type PromptOptions = {
   fragment: string[];
   schema?: string;
   template?: string;
+  continue?: boolean;
+  cid?: string;
 };
 
 async function getTemplate(
@@ -88,15 +96,48 @@ export function prompt() {
     .addOption(fragmentOption())
     .option("-S, --schema <schema>", "JSON schema DSL for structured output")
     .option("-t, --template <name>", "template name to use")
+    .option("-c, --continue", "continue the last conversation")
+    .option("--conversation, --cid <id>", "continue a specific conversation by id")
     .argument("[prompt]", "prompt text (use - for stdin)")
     .action(async (inputArg: string | undefined, cliOptions: PromptOptions) => {
       const params = await mergeCliOptionsWithTemplate(inputArg, cliOptions);
-      const { attachments, model, system, options, schema } = params;
+      const { attachments, system, options, schema } = params;
+      let { model } = params;
+
+      let previousMessages: Array<ModelMessage> = [];
+      let existingConversationId: string | undefined;
+
+      const continueId = cliOptions.cid;
+      const shouldContinue = cliOptions.continue || continueId;
+
+      if (shouldContinue) {
+        let conversation;
+        if (continueId) {
+          try {
+            conversation = await loadConversation(continueId);
+          } catch {
+            console.error(`Conversation ${continueId} not found`);
+            return exit(1);
+          }
+        } else {
+          conversation = await getLatestConversation();
+          if (!conversation) {
+            console.error("No previous conversation found");
+            return exit(1);
+          }
+        }
+        previousMessages = conversation.messages;
+        existingConversationId = conversation.id;
+        if (!cliOptions.model) {
+          model = conversation.model;
+        }
+      }
+
       if (!params.prompt) {
         console.error(
           "No prompt provided. Supply a prompt argument or use a template with a prompt.",
         );
-        exit(1);
+        return exit(1);
       }
 
       const needsStdin =
@@ -110,12 +151,13 @@ export function prompt() {
         cliOptions.fragment,
         stdinContent,
       );
-      const messages = await getMessages(
-        system,
+      const newMessages = await getMessages(
+        previousMessages.length > 0 ? undefined : system,
         prompt,
         attachments,
         fragmentsText,
       );
+      const messages = [...previousMessages, ...newMessages];
       const parsedSchema = schema
         ? parseConciseJsonSchemaDsl(schema)
         : undefined;
@@ -130,12 +172,25 @@ export function prompt() {
         });
         console.log(JSON.stringify(object, null, 2));
       } else {
-        const { textStream } = streamText({
+        const result = streamText({
           model: resolvedModel,
           providerOptions,
           messages,
         });
-        await printTextStream(textStream);
+        await printTextStream(result.textStream);
+
+        const response = await result.response;
+        const allMessages = [...messages, ...response.messages];
+
+        if (existingConversationId) {
+          const conversation = await loadConversation(existingConversationId);
+          conversation.messages = allMessages;
+          conversation.updatedAt = new Date().toISOString();
+          await saveConversation(conversation);
+        } else {
+          const conversation = createConversation(model, allMessages);
+          await saveConversation(conversation);
+        }
       }
     });
 

@@ -13,6 +13,13 @@ import {
 } from "../utils/template.ts";
 import { exit } from "node:process";
 import { resolveModel } from "../utils/resolve-model.ts";
+import {
+  loadConversation,
+  getLatestConversation,
+  saveConversation,
+  createConversation,
+} from "../utils/conversation.ts";
+import type { Conversation } from "../utils/conversation.ts";
 
 vi.mock("../utils/input", () => ({ getPrompt: vi.fn(), readStdin: vi.fn() }));
 vi.mock("../utils/get-messages", () => ({ getMessages: vi.fn() }));
@@ -39,6 +46,12 @@ vi.mock("../utils/template", async (importOriginal) => {
 vi.mock("node:process", () => ({
   exit: vi.fn(),
 }));
+vi.mock("../utils/conversation", () => ({
+  loadConversation: vi.fn(),
+  getLatestConversation: vi.fn(),
+  saveConversation: vi.fn(),
+  createConversation: vi.fn(),
+}));
 
 describe("prompt command", () => {
   beforeEach(() => {
@@ -49,6 +62,11 @@ describe("prompt command", () => {
     ]);
     vi.mocked(streamText).mockReturnValue({
       textStream: (async function* () {})(),
+      response: Promise.resolve({
+        messages: [
+          { role: "assistant", content: [{ type: "text", text: "response" }] },
+        ],
+      }),
     } as unknown as ReturnType<typeof streamText>);
     vi.mocked(printTextStream).mockResolvedValue(undefined);
     vi.mocked(parseConciseJsonSchemaDsl).mockReturnValue(undefined);
@@ -61,6 +79,14 @@ describe("prompt command", () => {
     vi.mocked(loadTemplate).mockRejectedValue(
       new TemplateNotFoundError("default", "/path/to/default.yaml"),
     );
+    vi.mocked(saveConversation).mockResolvedValue(undefined);
+    vi.mocked(createConversation).mockReturnValue({
+      id: "new-conv-id",
+      model: "openai/gpt-5-mini",
+      createdAt: "2026-04-30T10:00:00.000Z",
+      updatedAt: "2026-04-30T10:00:00.000Z",
+      messages: [],
+    });
   });
 
   it("should create a command named 'prompt'", () => {
@@ -157,6 +183,7 @@ describe("prompt command", () => {
     })();
     vi.mocked(streamText).mockReturnValue({
       textStream: mockTextStream,
+      response: Promise.resolve({ messages: [] }),
     } as unknown as ReturnType<typeof streamText>);
 
     const cmd = prompt();
@@ -786,6 +813,213 @@ describe("prompt command", () => {
       expect(exit).toHaveBeenCalledWith(1);
 
       consoleSpy.mockRestore();
+    });
+  });
+
+  describe("conversation persistence", () => {
+    it("should save a new conversation after streaming", async () => {
+      const cmd = prompt();
+      await cmd.parseAsync(["node", "test", "test prompt"]);
+
+      expect(createConversation).toHaveBeenCalled();
+      expect(saveConversation).toHaveBeenCalled();
+    });
+
+    it("should not save conversation when using --schema", async () => {
+      const mockSchema = {
+        type: "object" as const,
+        properties: { name: { type: "string" as const } },
+        required: ["name"],
+      };
+      vi.mocked(parseConciseJsonSchemaDsl).mockReturnValue(mockSchema);
+
+      const cmd = prompt();
+      await cmd.parseAsync(["node", "test", "-S", "name str", "test prompt"]);
+
+      expect(saveConversation).not.toHaveBeenCalled();
+    });
+
+    it("should load latest conversation when -c is used", async () => {
+      const existingConversation: Conversation = {
+        id: "existing-id",
+        model: "anthropic/claude-3-haiku",
+        createdAt: "2026-04-30T10:00:00.000Z",
+        updatedAt: "2026-04-30T10:00:00.000Z",
+        messages: [
+          { role: "user", content: [{ type: "text", text: "first message" }] },
+          {
+            role: "assistant",
+            content: [{ type: "text", text: "first reply" }],
+          },
+        ],
+      };
+      vi.mocked(getLatestConversation).mockResolvedValue(existingConversation);
+      vi.mocked(loadConversation).mockResolvedValue(existingConversation);
+
+      const cmd = prompt();
+      await cmd.parseAsync(["node", "test", "-c", "follow up"]);
+
+      expect(getLatestConversation).toHaveBeenCalled();
+      expect(streamText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: "anthropic/claude-3-haiku",
+        }),
+      );
+    });
+
+    it("should load specific conversation when --cid is used", async () => {
+      const existingConversation: Conversation = {
+        id: "specific-id",
+        model: "google/gemini-pro",
+        createdAt: "2026-04-30T10:00:00.000Z",
+        updatedAt: "2026-04-30T10:00:00.000Z",
+        messages: [
+          { role: "user", content: [{ type: "text", text: "hello" }] },
+        ],
+      };
+      vi.mocked(loadConversation).mockResolvedValue(existingConversation);
+
+      const cmd = prompt();
+      await cmd.parseAsync([
+        "node",
+        "test",
+        "--cid",
+        "specific-id",
+        "follow up",
+      ]);
+
+      expect(loadConversation).toHaveBeenCalledWith("specific-id");
+    });
+
+    it("should error when --cid and conversation not found", async () => {
+      vi.mocked(loadConversation).mockRejectedValue(new Error("ENOENT"));
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      const cmd = prompt();
+      await cmd.parseAsync([
+        "node",
+        "test",
+        "--cid",
+        "nonexistent",
+        "follow up",
+      ]);
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "Conversation nonexistent not found",
+      );
+      expect(exit).toHaveBeenCalledWith(1);
+
+      consoleSpy.mockRestore();
+    });
+
+    it("should error when -c and no previous conversation", async () => {
+      vi.mocked(getLatestConversation).mockResolvedValue(undefined);
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      const cmd = prompt();
+      await cmd.parseAsync(["node", "test", "-c", "follow up"]);
+
+      expect(consoleSpy).toHaveBeenCalledWith("No previous conversation found");
+      expect(exit).toHaveBeenCalledWith(1);
+
+      consoleSpy.mockRestore();
+    });
+
+    it("should prepend previous messages when continuing a conversation", async () => {
+      const previousMessages: ModelMessage[] = [
+        { role: "user", content: [{ type: "text", text: "hello" }] },
+        { role: "assistant", content: [{ type: "text", text: "hi there" }] },
+      ];
+      const existingConversation: Conversation = {
+        id: "conv-id",
+        model: "openai/gpt-5-mini",
+        createdAt: "2026-04-30T10:00:00.000Z",
+        updatedAt: "2026-04-30T10:00:00.000Z",
+        messages: previousMessages,
+      };
+      vi.mocked(getLatestConversation).mockResolvedValue(existingConversation);
+      vi.mocked(loadConversation).mockResolvedValue(existingConversation);
+
+      const newMessages: ModelMessage[] = [
+        { role: "user", content: [{ type: "text", text: "follow up" }] },
+      ];
+      vi.mocked(getMessages).mockResolvedValue(newMessages);
+
+      const cmd = prompt();
+      await cmd.parseAsync(["node", "test", "-c", "follow up"]);
+
+      expect(streamText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          messages: [...previousMessages, ...newMessages],
+        }),
+      );
+    });
+
+    it("should allow -m to override conversation model", async () => {
+      const existingConversation: Conversation = {
+        id: "conv-id",
+        model: "openai/gpt-5-mini",
+        createdAt: "2026-04-30T10:00:00.000Z",
+        updatedAt: "2026-04-30T10:00:00.000Z",
+        messages: [
+          { role: "user", content: [{ type: "text", text: "hello" }] },
+        ],
+      };
+      vi.mocked(getLatestConversation).mockResolvedValue(existingConversation);
+      vi.mocked(loadConversation).mockResolvedValue(existingConversation);
+
+      const cmd = prompt();
+      await cmd.parseAsync([
+        "node",
+        "test",
+        "-c",
+        "-m",
+        "anthropic/claude-3-haiku",
+        "follow up",
+      ]);
+
+      expect(streamText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: "anthropic/claude-3-haiku",
+        }),
+      );
+    });
+
+    it("should not include system message when continuing a conversation", async () => {
+      const existingConversation: Conversation = {
+        id: "conv-id",
+        model: "openai/gpt-5-mini",
+        createdAt: "2026-04-30T10:00:00.000Z",
+        updatedAt: "2026-04-30T10:00:00.000Z",
+        messages: [
+          { role: "system", content: "You are helpful" },
+          { role: "user", content: [{ type: "text", text: "hello" }] },
+        ],
+      };
+      vi.mocked(getLatestConversation).mockResolvedValue(existingConversation);
+      vi.mocked(loadConversation).mockResolvedValue(existingConversation);
+
+      const cmd = prompt();
+      await cmd.parseAsync([
+        "node",
+        "test",
+        "-c",
+        "-s",
+        "You are helpful",
+        "follow up",
+      ]);
+
+      // System should not be passed to getMessages when continuing
+      expect(getMessages).toHaveBeenCalledWith(
+        undefined,
+        "follow up",
+        [],
+        undefined,
+      );
     });
   });
 });
