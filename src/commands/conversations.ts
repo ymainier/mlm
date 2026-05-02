@@ -10,20 +10,27 @@ function truncate(text: string, maxLength: number): string {
   return text.slice(0, maxLength - 1) + "…";
 }
 
+function getTextContent(content: unknown): string {
+  if (typeof content === "string") return content;
+  if (!Array.isArray(content)) return "";
+  return content
+    .map((part: { type: string; text?: string; toolName?: string }) => {
+      if (part.type === "text") return part.text ?? "";
+      if (part.type === "image") return "[image attachment]";
+      if (part.type === "tool-call") return `[tool call: ${part.toolName}]`;
+      if (part.type === "tool-result") return `[tool result: ${part.toolName}]`;
+      return "";
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
 function getFirstUserPrompt(
   messages: Array<{ role: string; content: unknown }>,
 ): string {
   const userMsg = messages.find((m) => m.role === "user");
   if (!userMsg) return "";
-
-  if (typeof userMsg.content === "string") return userMsg.content;
-  if (Array.isArray(userMsg.content)) {
-    const textPart = userMsg.content.find(
-      (p: { type: string }) => p.type === "text",
-    );
-    return textPart?.text ?? "";
-  }
-  return "";
+  return getTextContent(userMsg.content);
 }
 
 function countRounds(
@@ -53,21 +60,6 @@ async function listAction({ limit }: { limit: string }) {
     drawHorizontalLine: (index) => index === 1,
   });
   console.log(output);
-}
-
-function getTextContent(content: unknown): string {
-  if (typeof content === "string") return content;
-  if (!Array.isArray(content)) return "";
-  return content
-    .map((part: { type: string; text?: string; toolName?: string }) => {
-      if (part.type === "text") return part.text ?? "";
-      if (part.type === "image") return "[image attachment]";
-      if (part.type === "tool-call") return `[tool call: ${part.toolName}]`;
-      if (part.type === "tool-result") return `[tool result: ${part.toolName}]`;
-      return "";
-    })
-    .filter(Boolean)
-    .join("\n");
 }
 
 function formatConversation(conversation: Conversation): string {

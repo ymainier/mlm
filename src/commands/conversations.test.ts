@@ -1,13 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { mockListConversations, mockLoadConversation } = vi.hoisted(() => ({
+const { mockListConversations } = vi.hoisted(() => ({
   mockListConversations: vi.fn(),
-  mockLoadConversation: vi.fn(),
 }));
 
 vi.mock("../utils/conversation.ts", () => ({
   listConversations: mockListConversations,
-  loadConversation: mockLoadConversation,
 }));
 
 import { conversations } from "./conversations.ts";
@@ -54,19 +52,14 @@ describe("conversations list", () => {
     await cmd.parseAsync(["node", "test", "list"]);
 
     const output = vi.mocked(console.log).mock.calls[0]?.[0] as string;
-    // Should show truncated ID (8 chars)
     expect(output).toContain("abcd1234");
     expect(output).not.toContain("abcd1234-5678");
-    // Should show rounds count (2 user messages)
     expect(output).toContain("2");
-    // Should show prompt
     expect(output).toContain("Hello world");
-    // Should have column headers
     expect(output).toContain("ID");
     expect(output).toContain("Rounds");
     expect(output).toContain("Prompt");
     expect(output).toContain("Updated");
-    // Should NOT have Model column
     expect(output).not.toContain("Model");
   });
 
@@ -112,15 +105,12 @@ describe("conversations show", () => {
     await cmd.parseAsync(["node", "test", "show", "abcd1234"]);
 
     const output = vi.mocked(console.log).mock.calls[0]?.[0] as string;
-    // Frontmatter delimiters
     expect(output).toMatch(/^---\n/);
     expect(output).toContain("\n---\n");
-    // Metadata fields
     expect(output).toContain("id: abcd1234-5678-9abc-def0-123456789abc");
     expect(output).toContain("created: 2026-04-30T10:00:00.000Z");
     expect(output).toContain("updated: 2026-04-30T12:00:00.000Z");
     expect(output).toContain("model: openai/gpt-5-mini");
-    // Messages still present after frontmatter
     expect(output).toContain("Hello");
     expect(output).toContain("Hi there");
   });
@@ -143,7 +133,6 @@ describe("conversations show", () => {
     expect(errors).toContain("Ambiguous");
     expect(errors).toContain("abcd1111");
     expect(errors).toContain("abcd2222");
-    // Should not display any conversation content
     expect(vi.mocked(console.log)).not.toHaveBeenCalled();
   });
 
@@ -174,13 +163,10 @@ describe("conversations show", () => {
     await cmd.parseAsync(["node", "test", "show", "abcd1234"]);
 
     const output = vi.mocked(console.log).mock.calls[0]?.[0] as string;
-    // Should contain role labels
     expect(output).toContain("> You:");
     expect(output).toContain("> Assistant:");
-    // Should contain message content
     expect(output).toContain("What is 2+2?");
     expect(output).toContain("4");
-    // Should NOT contain system message content
     expect(output).not.toContain("You are helpful");
   });
 

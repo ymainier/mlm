@@ -63,7 +63,11 @@ async function getTemplate(
   }
 }
 
-type MergedCliOptionsWithTemplate = Template & { model: string };
+type MergedCliOptionsWithTemplate = Template & {
+  model: string;
+  options: string[];
+  attachments: string[];
+};
 
 async function mergeCliOptionsWithTemplate(
   inputArg: string | undefined,
@@ -105,31 +109,31 @@ export function prompt() {
       let { model } = params;
 
       let previousMessages: Array<ModelMessage> = [];
-      let existingConversationId: string | undefined;
+      let existingConversation:
+        | Awaited<ReturnType<typeof loadConversation>>
+        | undefined;
 
       const continueId = cliOptions.cid;
       const shouldContinue = cliOptions.continue || continueId;
 
       if (shouldContinue) {
-        let conversation;
         if (continueId) {
           try {
-            conversation = await loadConversation(continueId);
+            existingConversation = await loadConversation(continueId);
           } catch {
             console.error(`Conversation ${continueId} not found`);
             return exit(1);
           }
         } else {
-          conversation = await getLatestConversation();
-          if (!conversation) {
+          existingConversation = await getLatestConversation();
+          if (!existingConversation) {
             console.error("No previous conversation found");
             return exit(1);
           }
         }
-        previousMessages = conversation.messages;
-        existingConversationId = conversation.id;
+        previousMessages = existingConversation.messages;
         if (!cliOptions.model) {
-          model = conversation.model;
+          model = existingConversation.model;
         }
       }
 
@@ -146,7 +150,7 @@ export function prompt() {
         needsStdin && !process.stdin.isTTY ? await readStdin() : undefined;
 
       const prompt = await getPrompt(params.prompt, stdinContent);
-      const providerOptions = parseProviderOptions(options ?? []);
+      const providerOptions = parseProviderOptions(options);
       const fragmentsText = await resolveFragments(
         cliOptions.fragment,
         stdinContent,
@@ -182,11 +186,10 @@ export function prompt() {
         const response = await result.response;
         const allMessages = [...messages, ...response.messages];
 
-        if (existingConversationId) {
-          const conversation = await loadConversation(existingConversationId);
-          conversation.messages = allMessages;
-          conversation.updatedAt = new Date().toISOString();
-          await saveConversation(conversation);
+        if (existingConversation) {
+          existingConversation.messages = allMessages;
+          existingConversation.updatedAt = new Date().toISOString();
+          await saveConversation(existingConversation);
         } else {
           const conversation = createConversation(model, allMessages);
           await saveConversation(conversation);
