@@ -191,4 +191,53 @@ describe("models command", () => {
       expect(output).not.toMatch(/\$/);
     });
   });
+
+  describe("--provider openrouter", () => {
+    const openrouterPayload = {
+      data: [
+        {
+          id: "deepseek/deepseek-v4-flash",
+          pricing: { prompt: "0.0000005", completion: "0.0000015" },
+        },
+        {
+          id: "anthropic/claude-sonnet-4.5",
+          pricing: { prompt: "0.000003", completion: "0.000015" },
+        },
+      ],
+    };
+
+    beforeEach(() => {
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(
+        new Response(JSON.stringify(openrouterPayload), { status: 200 }),
+      );
+    });
+
+    it("fetches from the openrouter models endpoint", async () => {
+      const cmd = models();
+      await cmd.parseAsync(["node", "test", "--provider", "openrouter"]);
+      expect(fetch).toHaveBeenCalledWith("https://openrouter.ai/api/v1/models");
+      expect(gateway.getAvailableModels).not.toHaveBeenCalled();
+    });
+
+    it("renders openrouter models with the openrouter: prefix", async () => {
+      const cmd = models();
+      await cmd.parseAsync([
+        "node",
+        "test",
+        "--provider",
+        "openrouter",
+        "--only-model",
+      ]);
+      const calls = vi.mocked(console.log).mock.calls.map((c) => c[0]);
+      expect(calls).toContain("openrouter:deepseek/deepseek-v4-flash");
+      expect(calls).toContain("openrouter:anthropic/claude-sonnet-4.5");
+    });
+
+    it("falls back to gateway for unknown --provider values", async () => {
+      const cmd = models();
+      await cmd.parseAsync(["node", "test", "--provider", "bogus"]);
+      expect(gateway.getAvailableModels).toHaveBeenCalled();
+      expect(fetch).not.toHaveBeenCalled();
+    });
+  });
 });

@@ -1,8 +1,5 @@
 import { Command } from "commander";
-import {
-  listConversations,
-  type Conversation,
-} from "../utils/conversation.ts";
+import { listConversations, type Conversation } from "../utils/conversation.ts";
 import { getBorderCharacters, table } from "table";
 
 function truncate(text: string, maxLength: number): string {
@@ -33,9 +30,7 @@ function getFirstUserPrompt(
   return getTextContent(userMsg.content);
 }
 
-function countRounds(
-  messages: Array<{ role: string }>,
-): number {
+function countRounds(messages: Array<{ role: string }>): number {
   return messages.filter((m) => m.role === "user").length;
 }
 

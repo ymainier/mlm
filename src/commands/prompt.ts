@@ -101,7 +101,10 @@ export function prompt() {
     .option("-S, --schema <schema>", "JSON schema DSL for structured output")
     .option("-t, --template <name>", "template name to use")
     .option("-c, --continue", "continue the last conversation")
-    .option("--conversation, --cid <id>", "continue a specific conversation by id")
+    .option(
+      "--conversation, --cid <id>",
+      "continue a specific conversation by id",
+    )
     .argument("[prompt]", "prompt text (use - for stdin)")
     .action(async (inputArg: string | undefined, cliOptions: PromptOptions) => {
       const params = await mergeCliOptionsWithTemplate(inputArg, cliOptions);

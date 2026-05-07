@@ -1,8 +1,17 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { resolveModel } from "./resolve-model.ts";
 
 vi.mock("ollama-ai-provider-v2", () => ({
   ollama: vi.fn((modelId: string) => ({ type: "ollama-model", modelId })),
+}));
+
+vi.mock("@openrouter/ai-sdk-provider", () => ({
+  createOpenRouter: vi.fn(({ apiKey }: { apiKey: string }) =>
+    Object.assign(
+      (modelId: string) => ({ type: "openrouter-model", modelId, apiKey }),
+      { apiKey },
+    ),
+  ),
 }));
 
 describe("resolveModel", () => {
@@ -27,5 +36,30 @@ describe("resolveModel", () => {
     const { ollama } = await import("ollama-ai-provider-v2");
     resolveModel("ollama/deepseek-r1:70b");
     expect(ollama).toHaveBeenCalledWith("deepseek-r1:70b");
+  });
+
+  describe("openrouter:", () => {
+    beforeEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it("returns an openrouter LanguageModel for openrouter: prefix", async () => {
+      vi.stubEnv("OPENROUTER_API_KEY", "sk-test");
+      const { createOpenRouter } = await import("@openrouter/ai-sdk-provider");
+      const result = resolveModel("openrouter:deepseek/deepseek-v4-flash");
+      expect(createOpenRouter).toHaveBeenCalledWith({ apiKey: "sk-test" });
+      expect(result).toEqual({
+        type: "openrouter-model",
+        modelId: "deepseek/deepseek-v4-flash",
+        apiKey: "sk-test",
+      });
+    });
+
+    it("throws a clear error when OPENROUTER_API_KEY is not set", () => {
+      vi.stubEnv("OPENROUTER_API_KEY", "");
+      expect(() =>
+        resolveModel("openrouter:deepseek/deepseek-v4-flash"),
+      ).toThrow(/OPENROUTER_API_KEY/);
+    });
   });
 });

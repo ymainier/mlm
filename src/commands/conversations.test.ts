@@ -127,8 +127,9 @@ describe("conversations show", () => {
     const cmd = conversations();
     await cmd.parseAsync(["node", "test", "show", "abcd"]);
 
-    const errors = vi.mocked(console.error).mock.calls
-      .map((c) => c[0])
+    const errors = vi
+      .mocked(console.error)
+      .mock.calls.map((c) => c[0])
       .join("\n");
     expect(errors).toContain("Ambiguous");
     expect(errors).toContain("abcd1111");
@@ -142,8 +143,9 @@ describe("conversations show", () => {
     const cmd = conversations();
     await cmd.parseAsync(["node", "test", "show", "zzzz"]);
 
-    const errors = vi.mocked(console.error).mock.calls
-      .map((c) => c[0])
+    const errors = vi
+      .mocked(console.error)
+      .mock.calls.map((c) => c[0])
       .join("\n");
     expect(errors).toContain("No conversation found");
     expect(vi.mocked(console.log)).not.toHaveBeenCalled();
@@ -183,7 +185,12 @@ describe("conversations show", () => {
         {
           role: "assistant",
           content: [
-            { type: "tool-call", toolCallId: "1", toolName: "search", input: {} },
+            {
+              type: "tool-call",
+              toolCallId: "1",
+              toolName: "search",
+              input: {},
+            },
           ],
         },
       ],
