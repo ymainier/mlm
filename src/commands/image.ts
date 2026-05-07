@@ -58,10 +58,14 @@ export function image() {
         );
 
         const providerOptions = parseProviderOptions(option);
+        // Local CLI: messages are assembled from our own code and trusted CLI
+        // args, so the SDK's prompt-injection warning about system entries in
+        // `messages` doesn't apply here.
         const result = await generateText({
           model: resolveModel(model),
           messages,
           providerOptions,
+          allowSystemInMessages: true,
         });
 
         const images = result.files.filter((f) =>

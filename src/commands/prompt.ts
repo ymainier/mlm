@@ -170,11 +170,15 @@ export function prompt() {
         : undefined;
 
       const resolvedModel = resolveModel(model);
+      // Local CLI: messages are assembled from our own code and trusted CLI
+      // args, so the SDK's prompt-injection warning about system entries in
+      // `messages` doesn't apply here.
       if (parsedSchema) {
         const { object } = await generateObject({
           model: resolvedModel,
           providerOptions,
           messages,
+          allowSystemInMessages: true,
           schema: jsonSchema(parsedSchema),
         });
         console.log(JSON.stringify(object, null, 2));
@@ -183,6 +187,7 @@ export function prompt() {
           model: resolvedModel,
           providerOptions,
           messages,
+          allowSystemInMessages: true,
         });
         await printTextStream(result.textStream);
 
